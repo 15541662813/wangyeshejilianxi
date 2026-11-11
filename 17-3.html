@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08121f">
+  <title>知识库智能客服 · 科研系统架构</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: #08121f;
+      color: #eaf3fc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 74% 0%, rgb(33 82 113 / 21%), transparent 43rem),
+        #08121f;
+    }
+
+    .page { width: min(1480px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 34px; }
+    .topbar, .heading, .diagram-caption { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .topbar { color: #91a7bc; font-size: 11px; letter-spacing: .16em; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #dceafa; font-weight: 700; }
+    .brand-mark { display: grid; width: 30px; aspect-ratio: 1; place-items: center; border: 1px solid #396484; border-radius: 9px; color: #63d5c1; }
+    .status { display: inline-flex; align-items: center; gap: 8px; }
+    .status::before { width: 7px; height: 7px; border-radius: 50%; background: #63d5c1; box-shadow: 0 0 12px #63d5c1; content: ""; }
+
+    .heading { align-items: flex-end; padding: 45px 0 24px; }
+    .eyebrow { margin: 0 0 10px; color: #63d5c1; font-size: 11px; font-weight: 700; letter-spacing: .22em; }
+    h1 { margin: 0; font-size: clamp(29px, 4vw, 43px); letter-spacing: -.04em; }
+    .intro { max-width: 430px; margin: 0 0 3px; color: #98adc2; font-size: 13px; line-height: 1.85; }
+
+    .diagram-shell {
+      overflow: auto;
+      border: 1px solid #243b52;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgb(13 29 47 / 96%), rgb(8 19 33 / 98%));
+      box-shadow: 0 24px 70px rgb(0 0 0 / 22%);
+      scrollbar-color: #36536e #0c1a2a;
+    }
+
+    .architecture { display: block; width: 100%; min-width: 1000px; height: auto; }
+    .diagram-caption { min-height: 48px; padding: 0 17px; color: #8299ae; font-size: 11px; }
+    .diagram-caption strong { color: #bdd0e1; font-weight: 600; }
+
+    .detail {
+      min-height: 56px;
+      margin-top: 15px;
+      padding: 14px 17px;
+      border: 1px solid #20384f;
+      border-radius: 11px;
+      background: rgb(13 29 47 / 72%);
+      color: #9bb1c6;
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    .detail strong { margin-right: 9px; color: #e7f2fc; font-size: 13px; }
+    .note { margin: 16px 0 0; color: #7189a0; font-size: 11px; line-height: 1.75; }
+
+    .architecture text { font-family: "Segoe UI", "Microsoft YaHei", sans-serif; }
+    .band { fill: #0c1b2b; stroke: #1c344b; stroke-width: 1; }
+    .band-ingest { fill: #0d1d2b; }
+    .band-runtime { fill: #0c1b2c; }
+    .band-governance { fill: #0d1a29; }
+    .band-title { fill: #7f99b2; font-size: 11px; font-weight: 700; letter-spacing: 1.4px; }
+    .band-note { fill: #647d94; font-size: 10px; }
+    .card { stroke-width: 1; transition: filter .16s ease, stroke .16s ease; }
+    .card-ingest { fill: #12363b; stroke: #28665f; }
+    .card-runtime { fill: #122e47; stroke: #315d82; }
+    .card-retrieval { fill: #172e4a; stroke: #426d99; }
+    .card-model { fill: #292544; stroke: #5e5081; }
+    .card-data { fill: #392f22; stroke: #806442; }
+    .card-governance { fill: #18352f; stroke: #377263; }
+    .node { cursor: pointer; outline: none; }
+    .node:hover .card, .node:focus .card { filter: brightness(1.3); stroke: #d0edff; stroke-width: 1.7; }
+    .node:focus-visible .card { stroke: #d0edff; stroke-width: 2; }
+    .node-title { fill: #e5f0fa; font-size: 12px; font-weight: 650; text-anchor: middle; }
+    .node-sub { fill: #9bb1c6; font-size: 9px; text-anchor: middle; }
+    .node-tag { fill: #6f899f; font-size: 8px; text-anchor: middle; }
+    .flow { fill: none; stroke: #5d94bd; stroke-width: 1.35; marker-end: url(#arrow); }
+    .flow-soft { fill: none; stroke: #52718d; stroke-width: 1.1; stroke-dasharray: 4 5; marker-end: url(#arrow-soft); }
+    .flow-ingest { stroke: #49b5a4; marker-end: url(#arrow-teal); }
+    .flow-feedback { stroke: #63bca9; stroke-dasharray: 5 5; marker-end: url(#arrow-teal); }
+    .flow-label { fill: #85a0b7; font-size: 9px; }
+    .divider { stroke: #21384d; stroke-width: 1; stroke-dasharray: 3 6; }
+    .flow-dot { fill: #b6eaff; filter: drop-shadow(0 0 4px #75caff); }
+    .pulse { animation: pulse 2.8s linear infinite; }
+    .pulse.delay-1 { animation-delay: -.8s; }
+    .pulse.delay-2 { animation-delay: -1.7s; }
+    @keyframes pulse { from { opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } to { opacity: 0; } }
+
+    @media (max-width: 700px) {
+      .page { width: calc(100% - 28px); padding-top: 23px; }
+      .topbar { font-size: 9px; }
+      .heading { display: block; padding: 36px 0 20px; }
+      .intro { margin-top: 12px; }
+      .architecture { min-width: 1000px; }
+      .diagram-caption { min-height: 44px; padding: 0 13px; font-size: 10px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">R</span><span>RESEARCH SYSTEMS · 17—3</span></div>
+      <span class="status">RETRIEVAL-AUGMENTED GENERATION</span>
+    </header>
+    <section class="heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">KNOWLEDGE-BASED INTELLIGENT SERVICE</p>
+        <h1 id="page-title">基于知识库的智能客服架构</h1>
+      </div>
+      <p class="intro">以检索增强生成（RAG）为核心，串联知识构建、混合检索、可信回答与离线评测，呈现可研究、可验证的智能客服系统。</p>
+    </section>
+    <section class="diagram-shell" aria-label="知识库智能客服科研系统 SVG 架构图">
+      <svg class="architecture" viewBox="0 0 1440 850" role="img" aria-labelledby="svg-title svg-desc" xmlns="http://www.w3.org/2000/svg">
+        <title id="svg-title">基于知识库的智能客服科研系统架构图</title>
+        <desc id="svg-desc">架构分为知识构建与索引、在线问答与检索增强生成、评测治理与运行保障三个部分，展示从知识文档到带引用客服回答的完整链路。</desc>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0 0 L8 4 L0 8 Z" fill="#5d94bd"/>
+          </marker>
+          <marker id="arrow-soft" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0 0 L8 4 L0 8 Z" fill="#52718d"/>
+          </marker>
+          <marker id="arrow-teal" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+            <path d="M0 0 L8 4 L0 8 Z" fill="#49b5a4"/>
+          </marker>
+          <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+            <path d="M28 0H0V28" fill="none" stroke="#7190a9" stroke-opacity=".055" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="1440" height="850" fill="#0a1929"/>
+        <rect width="1440" height="850" fill="url(#grid)"/>
+
+        <rect class="band band-ingest" x="20" y="24" width="1400" height="229" rx="14"/>
+        <text class="band-title" x="42" y="51">01 / KNOWLEDGE ENGINEERING</text>
+        <text class="band-note" x="307" y="51">离线数据链路 · 文档治理、语义表示与可追溯索引</text>
+        <line class="divider" x1="42" y1="65" x2="1398" y2="65"/>
+
+        <g class="node" tabindex="0" role="button" aria-label="知识来源：FAQ、产品手册、工单和业务数据库" data-title="多源知识输入" data-info="汇集 FAQ、产品手册、政策条款、历史工单及业务数据；通过来源标识、版本号和访问权限记录知识的来历。">
+          <rect class="card card-ingest" x="48" y="103" width="180" height="94" rx="10"/>
+          <text class="node-title" x="138" y="130">知识来源</text>
+          <text class="node-sub" x="138" y="151">FAQ · 产品手册 · 工单</text>
+          <text class="node-sub" x="138" y="168">业务数据库 · 多语言内容</text>
+          <text class="node-tag" x="138" y="185">SOURCE &amp; VERSION</text>
+        </g>
+        <path class="flow flow-ingest" d="M229 150 H267"/>
+        <text class="flow-label" x="232" y="139">导入</text>
+        <g class="node" tabindex="0" role="button" aria-label="文档解析与清洗：OCR、结构识别、去重和脱敏" data-title="文档解析与清洗" data-info="解析 PDF、网页和表格等格式，执行 OCR、结构识别、重复内容检测与敏感信息脱敏，保留文档层级和来源元数据。">
+          <rect class="card card-ingest" x="270" y="103" width="205" height="94" rx="10"/>
+          <text class="node-title" x="372" y="130">解析 · 清洗 · 脱敏</text>
+          <text class="node-sub" x="372" y="151">OCR / 结构识别 / 去重</text>
+          <text class="node-sub" x="372" y="168">元数据抽取 · 版本治理</text>
+          <text class="node-tag" x="372" y="185">DOCUMENT PROCESSING</text>
+        </g>
+        <path class="flow flow-ingest" d="M476 150 H514"/>
+        <text class="flow-label" x="478" y="139">标准化</text>
+        <g class="node" tabindex="0" role="button" aria-label="语义分块与向量化：按语义切分并生成嵌入" data-title="语义分块与向量化" data-info="按标题、段落及语义边界切分文档，控制片段长度与重叠；使用嵌入模型生成向量，并关联文档 ID、权限和更新时间。">
+          <rect class="card card-ingest" x="517" y="103" width="210" height="94" rx="10"/>
+          <text class="node-title" x="622" y="130">语义分块 · 向量化</text>
+          <text class="node-sub" x="622" y="151">Chunk / Overlap / Embedding</text>
+          <text class="node-sub" x="622" y="168">保留来源、权限与时间戳</text>
+          <text class="node-tag" x="622" y="185">SEMANTIC REPRESENTATION</text>
+        </g>
+        <path class="flow flow-ingest" d="M728 150 H767"/>
+        <text class="flow-label" x="732" y="139">写入索引</text>
+        <g class="node" tabindex="0" role="button" aria-label="知识索引构建：向量索引、关键词索引和元数据" data-title="多路知识索引" data-info="为同一知识片段建立向量索引、关键词倒排索引和元数据索引，支持混合检索、权限过滤及增量更新。">
+          <rect class="card card-data" x="770" y="103" width="215" height="94" rx="10"/>
+          <text class="node-title" x="877" y="130">多路知识索引</text>
+          <text class="node-sub" x="877" y="151">向量库 + 关键词倒排</text>
+          <text class="node-sub" x="877" y="168">元数据 · ACL · 版本快照</text>
+          <text class="node-tag" x="877" y="185">HYBRID INDEX</text>
+        </g>
+        <path class="flow-soft" d="M986 150 H1024"/>
+        <g class="node" tabindex="0" role="button" aria-label="知识质量控制：抽检、冲突检测、发布和回滚" data-title="知识质量与发布" data-info="建立入库抽检、冲突与过期知识检测、人工审核、版本发布和回滚流程，让索引更新可观测、可追溯。">
+          <rect class="card card-governance" x="1027" y="103" width="180" height="94" rx="10"/>
+          <text class="node-title" x="1117" y="130">质量控制与发布</text>
+          <text class="node-sub" x="1117" y="151">抽检 · 冲突检测 · 审核</text>
+          <text class="node-sub" x="1117" y="168">版本发布 · 回滚</text>
+          <text class="node-tag" x="1117" y="185">HUMAN-IN-THE-LOOP</text>
+        </g>
+        <path class="flow-soft" d="M1208 150 H1244"/>
+        <g class="node" tabindex="0" role="button" aria-label="知识存储：原文对象存储与索引快照" data-title="知识资产存储" data-info="对象存储保存原始文档与解析结果，索引快照和元数据记录知识版本，支持审计、回滚、备份及研究复现实验。">
+          <rect class="card card-data" x="1247" y="103" width="145" height="94" rx="10"/>
+          <text class="node-title" x="1319" y="130">知识资产</text>
+          <text class="node-sub" x="1319" y="151">原文 · 索引快照</text>
+          <text class="node-sub" x="1319" y="168">审计 · 备份</text>
+          <text class="node-tag" x="1319" y="185">KNOWLEDGE STORE</text>
+        </g>
+
+        <rect class="band band-runtime" x="20" y="272" width="1400" height="326" rx="14"/>
+        <text class="band-title" x="42" y="299">02 / ONLINE RAG SERVICE</text>
+        <text class="band-note" x="281" y="299">在线问答链路 · 召回、重排、生成、校验与引用</text>
+        <line class="divider" x1="42" y1="313" x2="1398" y2="313"/>
+
+        <g class="node" tabindex="0" role="button" aria-label="用户问题和会话上下文" data-title="用户问题与会话" data-info="接收用户问题及必要的会话上下文；在进入检索前做长度限制、语言识别和基础安全检查，避免无关历史污染检索。">
+          <rect class="card card-runtime" x="48" y="380" width="150" height="86" rx="10"/>
+          <text class="node-title" x="123" y="408">用户问题</text>
+          <text class="node-sub" x="123" y="430">会话上下文 · 多轮对话</text>
+          <text class="node-tag" x="123" y="450">QUERY</text>
+        </g>
+        <path class="flow" d="M199 423 H229"/>
+        <g class="node" tabindex="0" role="button" aria-label="接入鉴权与隐私保护" data-title="接入鉴权与隐私保护" data-info="完成租户与用户身份校验、请求限流和权限判定；对个人敏感信息执行最小化处理，并将权限过滤条件传递给检索服务。">
+          <rect class="card card-runtime" x="232" y="380" width="166" height="86" rx="10"/>
+          <text class="node-title" x="315" y="408">接入 · 鉴权</text>
+          <text class="node-sub" x="315" y="430">限流 · 隐私保护</text>
+          <text class="node-tag" x="315" y="450">API / ACCESS CONTROL</text>
+        </g>
+        <path class="flow" d="M399 423 H430"/>
+        <g class="node" tabindex="0" role="button" aria-label="对话编排：意图识别、问题改写和流程控制" data-title="对话编排与问题改写" data-info="识别咨询意图、处理追问中的指代消解，并将口语化问题改写为适合检索的独立查询；编排检索、工具调用与回答流程。">
+          <rect class="card card-runtime" x="433" y="380" width="177" height="86" rx="10"/>
+          <text class="node-title" x="521" y="408">对话编排</text>
+          <text class="node-sub" x="521" y="430">意图识别 · 查询改写</text>
+          <text class="node-tag" x="521" y="450">ORCHESTRATION</text>
+        </g>
+        <path class="flow" d="M611 423 H642"/>
+        <g class="node" tabindex="0" role="button" aria-label="混合检索与权限过滤" data-title="混合检索与权限过滤" data-info="并行执行向量语义召回与关键词检索，结合元数据、租户和 ACL 过滤候选片段；研究不同召回策略对覆盖率和精度的影响。">
+          <rect class="card card-retrieval" x="645" y="380" width="177" height="86" rx="10"/>
+          <text class="node-title" x="733" y="408">混合检索</text>
+          <text class="node-sub" x="733" y="430">向量召回 + BM25 · ACL</text>
+          <text class="node-tag" x="733" y="450">RECALL TOP-K</text>
+        </g>
+        <path class="flow" d="M823 423 H854"/>
+        <g class="node" tabindex="0" role="button" aria-label="候选片段重排与证据筛选" data-title="重排与证据筛选" data-info="通过交叉编码器或轻量重排模型对候选片段打分，结合相关性阈值、去重和上下文预算筛选证据，减少噪声召回。">
+          <rect class="card card-retrieval" x="857" y="380" width="165" height="86" rx="10"/>
+          <text class="node-title" x="939" y="408">重排 · 证据筛选</text>
+          <text class="node-sub" x="939" y="430">Reranker · 阈值 · 去重</text>
+          <text class="node-tag" x="939" y="450">RERANK TOP-N</text>
+        </g>
+        <path class="flow" d="M1023 423 H1054"/>
+        <g class="node" tabindex="0" role="button" aria-label="上下文构建与大语言模型生成" data-title="上下文构建与生成" data-info="将筛选后的证据与系统指令、用户问题组装为受控提示词；调用大语言模型生成答案，并要求内容仅基于可用证据。">
+          <rect class="card card-model" x="1057" y="380" width="163" height="86" rx="10"/>
+          <text class="node-title" x="1138" y="408">上下文 · LLM</text>
+          <text class="node-sub" x="1138" y="430">受控 Prompt · 生成</text>
+          <text class="node-tag" x="1138" y="450">GROUNDED GENERATION</text>
+        </g>
+        <path class="flow" d="M1221 423 H1252"/>
+        <g class="node" tabindex="0" role="button" aria-label="答案校验、引用展示和安全拒答" data-title="可信回答与引用" data-info="校验回答是否有证据支撑，展示来源文档和片段引用；证据不足、越权或触发安全策略时，进行澄清、拒答或转人工。">
+          <rect class="card card-governance" x="1255" y="380" width="137" height="86" rx="10"/>
+          <text class="node-title" x="1323" y="408">可信回答</text>
+          <text class="node-sub" x="1323" y="430">引用 · 拒答 · 转人工</text>
+          <text class="node-tag" x="1323" y="450">CITED RESPONSE</text>
+        </g>
+
+        <path class="flow-soft" d="M877 198 V334 H733 V376"/>
+        <text class="flow-label" x="744" y="329">受权限约束的知识召回</text>
+        <circle class="flow-dot pulse" r="3">
+          <animateMotion dur="3.6s" repeatCount="indefinite" path="M877 198 V334 H733 V376"/>
+        </circle>
+        <path class="flow-soft" d="M1319 198 V345 H939 V376"/>
+        <text class="flow-label" x="1120" y="340">版本与来源元数据</text>
+        <path class="flow-soft" d="M1323 469 V518 H123 V470"/>
+        <text class="flow-label" x="681" y="513">回答返回用户；低置信度进入澄清或人工服务</text>
+        <circle class="flow-dot pulse delay-1" r="3">
+          <animateMotion dur="4.4s" repeatCount="indefinite" path="M1323 469 V518 H123 V470"/>
+        </circle>
+
+        <path class="flow-soft" d="M733 469 V490 H877 V469"/>
+        <text class="flow-label" x="744" y="486">召回候选</text>
+        <path class="flow-soft" d="M939 469 V501 H1138 V469"/>
+        <text class="flow-label" x="1002" y="497">证据上下文</text>
+        <path class="flow-feedback" d="M1323 470 V564 H521 V469"/>
+        <text class="flow-label" x="553" y="559">用户反馈 / 未解决问题 → 查询改进与知识补充</text>
+        <circle class="flow-dot pulse delay-2" r="3">
+          <animateMotion dur="5s" repeatCount="indefinite" path="M1323 470 V564 H521 V469"/>
+        </circle>
+
+        <rect class="band band-governance" x="20" y="617" width="1400" height="207" rx="14"/>
+        <text class="band-title" x="42" y="644">03 / RESEARCH, EVALUATION &amp; OPERATIONS</text>
+        <text class="band-note" x="379" y="644">离线实验、在线观测与可信治理闭环</text>
+        <line class="divider" x1="42" y1="658" x2="1398" y2="658"/>
+
+        <g class="node" tabindex="0" role="button" aria-label="RAG 离线评测：检索指标、答案质量和消融实验" data-title="RAG 离线评测与消融" data-info="构建带标准答案与证据标注的评测集，分析 Recall@K、MRR、nDCG、忠实度、答案相关性与延迟；以消融实验比较切分、检索、重排和提示策略。">
+          <rect class="card card-governance" x="48" y="681" width="245" height="103" rx="10"/>
+          <text class="node-title" x="170" y="708">离线评测与消融实验</text>
+          <text class="node-sub" x="170" y="730">Recall@K · MRR · nDCG</text>
+          <text class="node-sub" x="170" y="747">忠实度 · 相关性 · 延迟</text>
+          <text class="node-tag" x="170" y="767">REPRODUCIBLE EVALUATION</text>
+        </g>
+        <g class="node" tabindex="0" role="button" aria-label="研究实验管理：数据集、模型版本和实验追踪" data-title="实验管理与可复现性" data-info="对数据集、嵌入模型、提示模板、检索参数和模型版本进行登记；保存实验配置、随机种子及结果，支持重复实验与公平对比。">
+          <rect class="card card-runtime" x="318" y="681" width="245" height="103" rx="10"/>
+          <text class="node-title" x="440" y="708">实验追踪与可复现</text>
+          <text class="node-sub" x="440" y="730">数据集 · 模型 · Prompt</text>
+          <text class="node-sub" x="440" y="747">参数版本 · 对照组</text>
+          <text class="node-tag" x="440" y="767">EXPERIMENT MANAGEMENT</text>
+        </g>
+        <g class="node" tabindex="0" role="button" aria-label="在线质量观测：反馈、无答案率、延迟和成本" data-title="在线质量与反馈观测" data-info="持续跟踪用户满意度、无答案率、引用覆盖率、检索耗时、生成延迟与推理成本；对低置信度回答和失败案例进行抽样分析。">
+          <rect class="card card-runtime" x="588" y="681" width="245" height="103" rx="10"/>
+          <text class="node-title" x="710" y="708">在线观测与用户反馈</text>
+          <text class="node-sub" x="710" y="730">满意度 · 无答案率 · 延迟</text>
+          <text class="node-sub" x="710" y="747">引用覆盖率 · 推理成本</text>
+          <text class="node-tag" x="710" y="767">CONTINUOUS MONITORING</text>
+        </g>
+        <g class="node" tabindex="0" role="button" aria-label="安全可信治理：权限隔离、提示注入防护和审计" data-title="安全、隐私与可信治理" data-info="执行知识权限隔离、最小化数据留存、提示注入防护和输出策略校验；记录必要审计信息并提供人工复核与事件响应机制。">
+          <rect class="card card-data" x="858" y="681" width="245" height="103" rx="10"/>
+          <text class="node-title" x="980" y="708">安全与可信治理</text>
+          <text class="node-sub" x="980" y="730">权限隔离 · 隐私保护</text>
+          <text class="node-sub" x="980" y="747">注入防护 · 审计追踪</text>
+          <text class="node-tag" x="980" y="767">RESPONSIBLE AI</text>
+        </g>
+        <g class="node" tabindex="0" role="button" aria-label="运行保障：日志、链路追踪、限流、缓存和熔断" data-title="服务运行与故障治理" data-info="通过结构化日志、调用链追踪和指标监控定位问题；配置缓存、限流、超时、熔断、降级与人工接管，保障服务稳定性。">
+          <rect class="card card-data" x="1128" y="681" width="264" height="103" rx="10"/>
+          <text class="node-title" x="1260" y="708">运行保障与故障治理</text>
+          <text class="node-sub" x="1260" y="730">日志 · 追踪 · 指标告警</text>
+          <text class="node-sub" x="1260" y="747">限流 · 熔断 · 降级</text>
+          <text class="node-tag" x="1260" y="767">RELIABILITY ENGINEERING</text>
+        </g>
+
+        <path class="flow-feedback" d="M170 680 V669 H440 V680"/>
+        <path class="flow-feedback" d="M710 680 V669 H170 V680"/>
+        <path class="flow-soft" d="M980 680 V670 H1260 V680"/>
+      </svg>
+      <div class="diagram-caption">
+        <strong>科研视角 · RAG 智能客服逻辑架构</strong>
+        <span>聚焦可追溯、可评测与人机协同</span>
+      </div>
+    </section>
+    <aside class="detail" aria-live="polite">
+      <strong id="detail-title">交互提示</strong>
+      <span id="detail-copy">将鼠标悬停或键盘聚焦在图中模块，可查看研究要点与模块职责；图中箭头表示知识流、在线请求和反馈闭环。</span>
+    </aside>
+    <p class="note">科研建议：在固定评测集与一致模型版本下进行对照及消融实验，同时报告检索质量、回答忠实度、用户体验、延迟和推理成本；架构中的模型、存储与指标可按课题需要替换。</p>
+  </main>
+  <script>
+    (() => {
+      const title = document.querySelector("#detail-title");
+      const copy = document.querySelector("#detail-copy");
+      const nodes = document.querySelectorAll(".architecture .node");
+      const defaultTitle = "交互提示";
+      const defaultCopy = "将鼠标悬停或键盘聚焦在图中模块，可查看研究要点与模块职责；图中箭头表示知识流、在线请求和反馈闭环。";
+
+      function showDetails(node) {
+        title.textContent = node.dataset.title;
+        copy.textContent = node.dataset.info;
+      }
+
+      function resetDetails() {
+        title.textContent = defaultTitle;
+        copy.textContent = defaultCopy;
+      }
+
+      nodes.forEach((node) => {
+        node.addEventListener("pointerenter", () => showDetails(node));
+        node.addEventListener("pointerleave", () => {
+          if (document.activeElement !== node) resetDetails();
+        });
+        node.addEventListener("focus", () => showDetails(node));
+        node.addEventListener("blur", resetDetails);
+        node.addEventListener("click", () => showDetails(node));
+        node.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            showDetails(node);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

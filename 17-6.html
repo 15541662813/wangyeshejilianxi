@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08121f">
+  <title>智能客服流程图与 ER 图 · Mermaid</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: #08121f;
+      color: #eaf3fc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 74% 0%, rgb(33 82 113 / 21%), transparent 43rem),
+        #08121f;
+    }
+
+    .page { width: min(1440px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 34px; }
+    .topbar, .heading, .panel-heading, .panel-footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .topbar { color: #91a7bc; font-size: 11px; letter-spacing: .16em; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #dceafa; font-weight: 700; }
+    .brand-mark { display: grid; width: 30px; aspect-ratio: 1; place-items: center; border: 1px solid #396484; border-radius: 9px; color: #63d5c1; }
+    .status { display: inline-flex; align-items: center; gap: 8px; }
+    .status::before { width: 7px; height: 7px; border-radius: 50%; background: #63d5c1; box-shadow: 0 0 12px #63d5c1; content: ""; }
+
+    .heading { align-items: flex-end; padding: 45px 0 27px; }
+    .eyebrow { margin: 0 0 10px; color: #63d5c1; font-size: 11px; font-weight: 700; letter-spacing: .22em; }
+    h1 { margin: 0; font-size: clamp(29px, 4vw, 43px); letter-spacing: -.04em; }
+    .intro { max-width: 450px; margin: 0 0 3px; color: #98adc2; font-size: 13px; line-height: 1.85; }
+
+    .panels { display: grid; gap: 18px; }
+    .panel {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid #243b52;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgb(13 29 47 / 96%), rgb(8 19 33 / 98%));
+      box-shadow: 0 24px 70px rgb(0 0 0 / 18%);
+    }
+
+    .panel-heading { min-height: 78px; padding: 16px 20px 14px; border-bottom: 1px solid rgb(48 72 94 / 55%); }
+    .panel-heading h2 { margin: 0; font-size: 15px; font-weight: 650; }
+    .panel-heading p { margin: 6px 0 0; color: #8199ae; font-size: 11px; }
+    .panel-tag { flex: 0 0 auto; padding: 6px 9px; border: 1px solid #29485d; border-radius: 99px; color: #83bfc0; font-size: 9px; letter-spacing: .1em; }
+
+    .diagram-scroll { overflow: auto; min-height: 260px; scrollbar-color: #36536e #0c1a2a; }
+    .diagram {
+      display: flex;
+      min-width: 820px;
+      min-height: 260px;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    #flow-diagram svg { width: 100%; min-width: 1120px; height: auto; }
+    #er-diagram svg { width: 100%; min-width: 1000px; height: auto; }
+    .diagram svg { max-width: none; overflow: visible; }
+
+    .panel-footer { min-height: 43px; padding: 9px 18px; border-top: 1px solid rgb(48 72 94 / 48%); color: #7189a0; font-size: 10px; line-height: 1.6; }
+    .download {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border: 1px solid #31546c;
+      border-radius: 8px;
+      background: #10283a;
+      color: #cfe2f3;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .download:hover { border-color: #63d5c1; color: #fff; }
+    .download:focus-visible { outline: 2px solid #63d5c1; outline-offset: 3px; }
+    .message { display: none; margin: 14px 18px; color: #ffba97; font-size: 12px; line-height: 1.6; }
+
+    .research-note {
+      margin-top: 17px;
+      padding: 14px 17px;
+      border: 1px solid #20384f;
+      border-radius: 11px;
+      background: rgb(13 29 47 / 72%);
+      color: #9bb1c6;
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    .research-note strong { margin-right: 8px; color: #e7f2fc; }
+    .footer { margin-top: 15px; color: #7189a0; font-size: 10px; line-height: 1.7; }
+
+    @media (max-width: 700px) {
+      .page { width: calc(100% - 28px); padding-top: 23px; }
+      .topbar { font-size: 9px; }
+      .heading { display: block; padding: 37px 0 21px; }
+      .intro { margin-top: 12px; }
+      .panel-heading { min-height: 72px; padding: 14px; }
+      .diagram { justify-content: flex-start; padding: 16px; }
+      .panel-footer { padding-right: 12px; padding-left: 12px; }
+      .panel-footer > span { max-width: 68%; }
+      .footer { align-items: flex-start; flex-direction: column; gap: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">M</span><span>MERMAID SYSTEM MAP · 17—6</span></div>
+      <span class="status">INTELLIGENT CUSTOMER SERVICE</span>
+    </header>
+    <section class="heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">KNOWLEDGE-BASED SERVICE PLATFORM</p>
+        <h1 id="page-title">智能客服系统流程与数据模型</h1>
+      </div>
+      <p class="intro">以 Mermaid 描绘从用户提问、知识检索到答案反馈的完整流程，并用 ER 图说明客服会话与知识库的核心数据关系。</p>
+    </section>
+
+    <section class="panels" aria-label="智能客服流程图和实体关系图">
+      <article class="panel">
+        <header class="panel-heading">
+          <div>
+            <h2>智能客服业务流程图</h2>
+            <p>问题接入 · RAG 检索 · 可信回答 · 人工协同闭环</p>
+          </div>
+          <span class="panel-tag">FLOWCHART · TD</span>
+        </header>
+        <div class="diagram-scroll">
+          <div class="diagram" id="flow-diagram" role="img" aria-label="智能客服从用户提问到知识检索、生成回答及反馈处理的业务流程图"></div>
+        </div>
+        <p class="message" id="flow-error" role="status"></p>
+        <footer class="panel-footer">
+          <span>检索无依据时转入澄清或人工处理；用户反馈进入知识治理和评测闭环。</span>
+          <button class="download" type="button" data-export="flow-diagram" data-filename="intelligent-customer-service-flow.svg">下载 SVG</button>
+        </footer>
+      </article>
+
+      <article class="panel">
+        <header class="panel-heading">
+          <div>
+            <h2>核心数据实体关系图</h2>
+            <p>用户、会话、消息、知识文档、检索记录与反馈之间的关系</p>
+          </div>
+          <span class="panel-tag">ER DIAGRAM · CORE ENTITIES</span>
+        </header>
+        <div class="diagram-scroll">
+          <div class="diagram" id="er-diagram" role="img" aria-label="智能客服平台核心数据实体及一对多关系 ER 图"></div>
+        </div>
+        <p class="message" id="er-error" role="status"></p>
+        <footer class="panel-footer">
+          <span>PK 表示主键，FK 表示外键；基数符号表示实体间的业务关联数量。</span>
+          <button class="download" type="button" data-export="er-diagram" data-filename="intelligent-customer-service-er.svg">下载 SVG</button>
+        </footer>
+      </article>
+    </section>
+
+    <aside class="research-note">
+      <strong>设计说明</strong>
+      流程图展示知识问答、业务工具调用、证据校验与低置信度转人工路径；ER 图为逻辑数据模型示意，实际落库时可按租户隔离、审计与隐私规范补充索引、软删除及数据保留策略。
+    </aside>
+    <footer class="footer">
+      <span>Mermaid 11.4.1 · 使用本地浏览器脚本渲染</span>
+      <span>流程图与 ER 图均可下载为 SVG 矢量文件</span>
+    </footer>
+  </main>
+
+  <script src="cdn/mermaid.min.js"></script>
+  <script>
+    (() => {
+      const flowSource = `
+flowchart TD
+  subgraph USER["用户与接入"]
+    U["用户提问 / 多轮会话"] --> API["渠道接入 / 身份鉴权"]
+    API --> CLEAN["问题清洗 / 隐私过滤"]
+  end
+
+  subgraph ROUTER["对话编排"]
+    CLEAN --> INTENT["意图识别 / 查询改写"]
+    INTENT --> ROUTE{"问题类型？"}
+  end
+
+  subgraph RAG["知识库检索增强"]
+    HYBRID["混合检索<br/>向量召回 + BM25"]
+    ACL["权限与版本过滤"]
+    RERANK["候选重排 / 证据去重"]
+    CHECK{"证据充分且可信？"}
+    HYBRID --> ACL --> RERANK --> CHECK
+  end
+
+  subgraph GENERATE["回答与服务"]
+    CONTEXT["构建证据上下文"]
+    LLM["大语言模型生成"]
+    VERIFY["安全与引用校验"]
+    ANSWER["返回带来源引用的回答"]
+    CLARIFY["澄清问题 / 转人工客服"]
+    TOOL["受控业务工具调用"]
+    SYSTEM["订单 / 物流 / 账户服务"]
+    ROUTE -->|知识咨询| HYBRID
+    ROUTE -->|实时业务查询| TOOL --> SYSTEM --> CONTEXT
+    CHECK -->|是| CONTEXT --> LLM --> VERIFY --> ANSWER
+    CHECK -->|否| CLARIFY
+  end
+
+  subgraph GOVERN["运营与知识治理"]
+    FEEDBACK["用户评价 / 未解决问题"]
+    REVIEW["人工复核 / 知识更新"]
+    INDEX["解析清洗 / 分块 / 建立索引"]
+    SOURCE["FAQ / 文档 / 已审核工单"]
+    METRICS["检索质量 / 忠实度 / 时延监测"]
+    SOURCE --> INDEX
+    FEEDBACK --> REVIEW --> INDEX
+    ANSWER -.-> FEEDBACK
+    ANSWER --> METRICS
+    CLARIFY --> FEEDBACK
+  end
+
+  INDEX -.知识索引更新.-> HYBRID
+
+  classDef user fill:#123b40,stroke:#3b9b8c,color:#e7fffa,stroke-width:1.5px
+  classDef process fill:#142f48,stroke:#4677a0,color:#eaf4ff,stroke-width:1.2px
+  classDef decision fill:#493c25,stroke:#c49c50,color:#fff4d8,stroke-width:1.5px
+  classDef model fill:#30294a,stroke:#8673b6,color:#f4edff,stroke-width:1.5px
+  classDef store fill:#3b3023,stroke:#a67f49,color:#fff3dd,stroke-width:1.2px
+  classDef human fill:#183b34,stroke:#4aa38c,color:#e6fff6,stroke-width:1.5px
+  class U,API,CLEAN user
+  class INTENT,HYBRID,ACL,RERANK,CONTEXT,VERIFY,TOOL,SYSTEM,INDEX process
+  class ROUTE,CHECK decision
+  class LLM,ANSWER model
+  class SOURCE,METRICS store
+  class CLARIFY,FEEDBACK,REVIEW human
+  linkStyle default stroke:#6f9cba,stroke-width:1.5px,color:#b6cadd
+`;
+
+      const erSource = `
+erDiagram
+  USER_ACCOUNT ||--o{ CHAT_SESSION : owns
+  CHAT_SESSION ||--o{ CHAT_MESSAGE : contains
+  KNOWLEDGE_DOCUMENT ||--|{ KNOWLEDGE_CHUNK : split_into
+  CHAT_SESSION ||--o{ RETRIEVAL_RECORD : produces
+  CHAT_MESSAGE ||--o{ RETRIEVAL_RECORD : references
+  KNOWLEDGE_CHUNK ||--o{ RETRIEVAL_RECORD : retrieved_as
+  CHAT_MESSAGE ||--o{ FEEDBACK : receives
+  USER_ACCOUNT ||--o{ FEEDBACK : submits
+  CHAT_SESSION ||--o{ HUMAN_TICKET : escalates_to
+  USER_ACCOUNT ||--o{ HUMAN_TICKET : requests
+
+  USER_ACCOUNT {
+    bigint user_id PK
+    string display_name
+    string tenant_id FK
+    datetime created_at
+  }
+  CHAT_SESSION {
+    bigint session_id PK
+    bigint user_id FK
+    string status
+    datetime started_at
+  }
+  CHAT_MESSAGE {
+    bigint message_id PK
+    bigint session_id FK
+    string role
+    text content
+    datetime created_at
+  }
+  KNOWLEDGE_DOCUMENT {
+    bigint document_id PK
+    string title
+    string version
+    string access_scope
+  }
+  KNOWLEDGE_CHUNK {
+    bigint chunk_id PK
+    bigint document_id FK
+    text chunk_text
+    string embedding_ref
+  }
+  RETRIEVAL_RECORD {
+    bigint retrieval_id PK
+    bigint message_id FK
+    bigint chunk_id FK
+    float relevance_score
+    int rank
+  }
+  FEEDBACK {
+    bigint feedback_id PK
+    bigint message_id FK
+    bigint user_id FK
+    int rating
+    text comment
+  }
+  HUMAN_TICKET {
+    bigint ticket_id PK
+    bigint session_id FK
+    bigint user_id FK
+    string ticket_status
+    datetime created_at
+  }
+`;
+
+      const errorText = (error) => error instanceof Error ? error.message : String(error);
+      const showError = (element, error) => {
+        console.error(`Mermaid render failed for ${element.id}:`, error);
+        const message = document.querySelector(`#${element.id.replace("-diagram", "-error")}`);
+        message.textContent = `图表渲染失败：${errorText(error)}。请确认 cdn/mermaid.min.js 已正确加载。`;
+        message.style.display = "block";
+      };
+
+      async function renderDiagram(container, source) {
+        const result = await mermaid.render(`${container.id}-svg`, source);
+        container.innerHTML = result.svg;
+        const svg = container.querySelector("svg");
+        if (!svg) throw new Error("Mermaid did not return an SVG diagram");
+        svg.setAttribute("role", "img");
+        svg.setAttribute("aria-label", container.getAttribute("aria-label"));
+        svg.removeAttribute("style");
+        if (result.bindFunctions) result.bindFunctions(container);
+      }
+
+      function downloadSvg(container, filename) {
+        const svg = container.querySelector("svg");
+        if (!svg) throw new Error("Diagram is not ready to download");
+        const copy = svg.cloneNode(true);
+        copy.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        copy.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink");
+        const source = new XMLSerializer().serializeToString(copy);
+        const blob = new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${source}`], {
+          type: "image/svg+xml;charset=utf-8"
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+
+      if (!window.mermaid) {
+        const error = new Error("Mermaid script not found");
+        document.querySelectorAll(".diagram").forEach(element => showError(element, error));
+        return;
+      }
+
+      mermaid.initialize({
+        startOnLoad: false,
+        securityLevel: "strict",
+        theme: "base",
+        themeVariables: {
+          darkMode: true,
+          background: "#0a1929",
+          primaryColor: "#142f48",
+          primaryTextColor: "#eaf3fc",
+          primaryBorderColor: "#4677a0",
+          lineColor: "#6f9cba",
+          secondaryColor: "#173a3e",
+          tertiaryColor: "#332b49",
+          mainBkg: "#142f48",
+          nodeBorder: "#4677a0",
+          clusterBkg: "#0d1d2b",
+          clusterBorder: "#29445c",
+          titleColor: "#eaf3fc",
+          edgeLabelBackground: "#102033",
+          fontFamily: '"Segoe UI", "Microsoft YaHei", sans-serif'
+        },
+        flowchart: {
+          htmlLabels: true,
+          curve: "linear",
+          nodeSpacing: 38,
+          rankSpacing: 48,
+          useMaxWidth: false
+        },
+        er: {
+          useMaxWidth: false,
+          layoutDirection: "TB"
+        }
+      });
+
+      const flowContainer = document.querySelector("#flow-diagram");
+      const erContainer = document.querySelector("#er-diagram");
+      Promise.all([
+        renderDiagram(flowContainer, flowSource).catch(error => showError(flowContainer, error)),
+        renderDiagram(erContainer, erSource).catch(error => showError(erContainer, error))
+      ]);
+
+      document.querySelectorAll("[data-export]").forEach((button) => {
+        button.addEventListener("click", () => {
+          const container = document.getElementById(button.dataset.export);
+          try {
+            downloadSvg(container, button.dataset.filename);
+          } catch (error) {
+            showError(container, error);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

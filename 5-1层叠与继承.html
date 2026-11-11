@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>层叠与继承</title>
+    <style>
+       p{
+        color: red;
+        font-size: 100px;
+       }
+       .text{
+        color: blue;
+        font-size: 50px;
+       }
+       #text{
+        color: rgb(227, 41, 190);
+        font-size: 30px;
+       }
+       .box p{
+        color:orange
+       }
+       #box #text{
+        color: silver;
+       }
+       .text{
+        color: black!important;
+       }
+       #box{
+        /*宽300高400灰色背景，间距字间距5px*/
+        width: 1400px;
+        height: 400px;
+        background-color:gray;
+        letter-spacing: 10px;
+        margin: 10px;
+        padding: 10px;
+        letter-spacing: 25px;
+        /*圆角矩形50du*/
+        border-radius: 50px;
+       }
+    </style>
+    <link rel="stylesheet" href="css.css">
+</head>
+<body>
+    <h2>层叠与继承</h2>
+    <div id="box" class="box">
+        <p id="text" class="text">306 王大军</p>
+        <p>层叠与继承的优先级</p>
+    </div>
+    
+
+</body>
+</html>

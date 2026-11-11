@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#242424">
+  <title>NBA 赛程 - 今日比赛</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #242424;
+      --panel: #303030;
+      --panel-light: #393939;
+      --line: #444;
+      --text: #f2f2f2;
+      --muted: #aaa;
+      --blue: #0788e8;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: Arial, "Microsoft YaHei", sans-serif;
+      font-size: 14px;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .top-strip {
+      height: 57px;
+      padding: 0 3.6%;
+      border-top: 5px solid #333;
+      border-bottom: 1px solid #3b3b3b;
+      background: #222;
+    }
+
+    .top-inner {
+      display: flex;
+      height: 100%;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .search {
+      display: flex;
+      width: 181px;
+      height: 36px;
+      flex: 0 0 181px;
+      align-items: center;
+      padding: 0 11px;
+      border: 1px solid #505050;
+      border-radius: 22px;
+      background: #282828;
+    }
+
+    .search input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .search input::placeholder { color: #888; }
+    .search button { padding: 3px; border: 0; background: none; color: #ddd; cursor: pointer; font-size: 17px; }
+
+    .quick-teams {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      gap: 9px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .quick-team {
+      display: inline-flex;
+      height: 34px;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 7px;
+      padding: 0 8px;
+      border: 1px solid #555;
+      border-radius: 20px;
+      background: #3a3a3a;
+      color: #e4e4e4;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .quick-team:hover, .quick-team.followed { border-color: #888; background: #484848; }
+    .quick-team .team-mini { font-size: 15px; }
+    .quick-team .quick-add { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 50%; background: #555; font-size: 17px; line-height: 1; }
+    .quick-team.followed .quick-add { color: #78c68b; }
+    .top-arrows { display: flex; gap: 8px; }
+
+    .icon-button {
+      display: grid;
+      width: 26px;
+      height: 26px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      background: #333;
+      color: #c8c8c8;
+      cursor: pointer;
+      font-size: 21px;
+      line-height: 1;
+    }
+
+    .icon-button:hover { background: #484848; }
+    .content { width: min(1240px, 92.8%); margin: 0 auto; }
+
+    .league-header {
+      display: flex;
+      min-height: 108px;
+      align-items: center;
+      gap: 25px;
+      padding-top: 6px;
+    }
+
+    .league-mark {
+      display: grid;
+      width: 35px;
+      height: 80px;
+      flex: 0 0 auto;
+      place-items: center;
+      overflow: hidden;
+      border: 2px solid #f4f4f4;
+      border-radius: 10px 10px 7px 7px;
+      background: linear-gradient(90deg, #1766ab 0 50%, #d53b48 50%);
+      color: white;
+      font-size: 27px;
+      font-weight: 900;
+      font-style: italic;
+      box-shadow: inset 0 0 0 2px rgb(0 0 0 / 14%);
+    }
+
+    .league-title h1 { margin: 0 0 10px; font-size: 25px; letter-spacing: .02em; }
+    .follow-league {
+      min-width: 85px;
+      padding: 4px 13px;
+      border: 1px solid #555;
+      border-radius: 18px;
+      background: transparent;
+      color: #eee;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .follow-league:hover, .follow-league.is-following { border-color: #777; background: #373737; }
+    .main-nav { display: flex; height: 48px; align-items: stretch; gap: 27px; border-bottom: 1px solid transparent; }
+    .nav-link {
+      position: relative;
+      padding: 0 2px;
+      border: 0;
+      background: none;
+      color: #d3d3d3;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .nav-link:hover, .nav-link.active { color: #fff; font-weight: 700; }
+    .nav-link.active::after { position: absolute; right: 0; bottom: 0; left: 0; height: 2px; background: var(--blue); content: ""; opacity: 0; }
+    .schedule-heading { margin: 16px 0 12px; font-size: 19px; font-weight: 700; }
+
+    .date-row {
+      display: flex;
+      height: 49px;
+      align-items: flex-start;
+      gap: 8px;
+      overflow: hidden;
+    }
+
+    .date-list { display: flex; flex: 1; gap: 12px; overflow-x: auto; scrollbar-width: none; }
+    .date-list::-webkit-scrollbar { display: none; }
+    .date-pill {
+      height: 34px;
+      flex: 0 0 auto;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 20px;
+      background: #383838;
+      color: #c7c7c7;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background .15s ease;
+    }
+
+    .date-pill:hover { background: #4a4a4a; }
+    .date-pill.selected { background: var(--blue); color: white; }
+    .date-arrows { display: flex; gap: 8px; padding-top: 3px; }
+
+    .games-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .game-card {
+      position: relative;
+      min-height: 209px;
+      padding: 17px 17px 18px;
+      border-radius: 7px;
+      background: var(--panel);
+      transition: background .15s ease, transform .15s ease;
+    }
+
+    .game-card:hover { background: #343434; }
+    .game-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(140px, .9fr) minmax(0, 1fr);
+      min-height: 121px;
+      align-items: start;
+    }
+
+    .team-side { display: flex; min-width: 0; align-items: center; gap: 10px; padding-top: 4px; }
+    .team-side.away { flex-direction: row-reverse; text-align: right; }
+    .team-logo {
+      display: grid;
+      width: 57px;
+      height: 57px;
+      flex: 0 0 57px;
+      place-items: center;
+      border: 2px solid var(--team-outline, transparent);
+      border-radius: var(--team-radius, 50%);
+      background: var(--team-bg, transparent);
+      color: var(--team-color, white);
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: -.08em;
+      text-shadow: 0 1px 3px rgb(0 0 0 / 55%);
+    }
+
+    .team-name { min-width: 0; }
+    .team-city { display: block; margin-bottom: 4px; color: #ddd; font-size: 11px; white-space: nowrap; }
+    .team-nickname { display: block; color: white; font-size: 17px; font-weight: 700; white-space: nowrap; }
+    .team-follow {
+      display: grid;
+      width: 21px;
+      height: 21px;
+      margin-top: 10px;
+      place-items: center;
+      border: 1px solid #666;
+      border-radius: 50%;
+      background: transparent;
+      color: #d9d9d9;
+      cursor: pointer;
+      font-size: 17px;
+      line-height: 1;
+    }
+
+    .team-follow:hover, .team-follow.followed { border-color: var(--blue); color: #62b9ff; }
+    .team-side.away .team-follow { margin-left: auto; }
+    .game-info { padding: 3px 4px 0; text-align: center; }
+    .game-date { margin-bottom: 5px; color: #e3e3e3; font-size: 13px; white-space: nowrap; }
+    .game-time { display: block; margin-bottom: 8px; font-size: 20px; font-weight: 700; }
+    .game-venue { min-height: 34px; color: #ccc; font-size: 12px; line-height: 1.65; }
+    .game-type { margin-top: 1px; color: #ddd; font-size: 12px; }
+    .details-button {
+      display: block;
+      min-height: 32px;
+      margin: 4px auto 0;
+      padding: 0 12px;
+      border: 1px solid #0788e8;
+      border-radius: 20px;
+      background: transparent;
+      color: #38aaff;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .details-button:hover { background: #0788e8; color: white; }
+    .empty-state { grid-column: 1 / -1; padding: 54px 20px; border-radius: 7px; background: var(--panel); color: #bbb; text-align: center; line-height: 1.8; }
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 5;
+      max-width: min(360px, calc(100vw - 44px));
+      padding: 12px 16px;
+      border: 1px solid #555;
+      border-radius: 9px;
+      background: #383838;
+      color: #f3f3f3;
+      box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .toast.visible { opacity: 1; transform: translateY(0); }
+    dialog {
+      width: min(430px, calc(100% - 32px));
+      padding: 0;
+      border: 1px solid #505050;
+      border-radius: 12px;
+      background: #303030;
+      color: var(--text);
+      box-shadow: 0 20px 70px rgb(0 0 0 / 55%);
+    }
+
+    dialog::backdrop { background: rgb(0 0 0 / 68%); }
+    .dialog-content { padding: 23px; }
+    .dialog-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .dialog-top h2 { margin: 0; font-size: 18px; }
+    .dialog-close { width: 30px; height: 30px; border: 0; border-radius: 50%; background: #444; color: white; cursor: pointer; font-size: 18px; }
+    .dialog-matchup { margin: 22px 0; color: #ddd; font-size: 15px; text-align: center; }
+    .dialog-matchup strong { display: block; margin: 10px 0; color: white; font-size: 21px; }
+    .dialog-meta { padding-top: 15px; border-top: 1px solid #484848; color: #bbb; font-size: 13px; line-height: 2; }
+
+    @media (max-width: 800px) {
+      .top-inner { gap: 12px; }
+      .search { width: 155px; flex-basis: 155px; }
+      .quick-team:nth-of-type(n+5) { display: none; }
+      .content { width: 94%; }
+      .game-layout { grid-template-columns: minmax(0, 1fr) minmax(120px, .85fr) minmax(0, 1fr); }
+      .team-logo { width: 46px; height: 46px; flex-basis: 46px; font-size: 14px; }
+      .team-side { gap: 7px; }
+    }
+
+    @media (max-width: 600px) {
+      .top-strip { padding: 0 12px; }
+      .top-inner { gap: 9px; }
+      .search { width: 42px; flex-basis: 42px; padding: 0 10px; }
+      .search input { width: 0; }
+      .search:focus-within { width: 145px; flex-basis: 145px; }
+      .search:focus-within input { width: 100%; }
+      .quick-teams { gap: 6px; }
+      .quick-team { padding: 0 7px; font-size: 11px; }
+      .quick-team:nth-of-type(n+4) { display: none; }
+      .top-arrows { display: none; }
+      .content { width: calc(100% - 28px); }
+      .league-header { min-height: 96px; gap: 16px; }
+      .league-mark { width: 31px; height: 69px; font-size: 23px; }
+      .league-title h1 { font-size: 20px; }
+      .main-nav { height: 44px; gap: 19px; overflow-x: auto; }
+      .nav-link { flex: 0 0 auto; font-size: 13px; }
+      .schedule-heading { margin-top: 14px; }
+      .date-row { gap: 5px; }
+      .date-list { gap: 7px; }
+      .date-pill { height: 31px; padding: 0 11px; font-size: 11px; }
+      .date-arrows { gap: 5px; }
+      .date-arrows .icon-button { width: 23px; height: 23px; }
+      .games-grid { grid-template-columns: 1fr; gap: 10px; }
+      .game-card { min-height: 196px; padding: 15px 13px; }
+      .game-layout { grid-template-columns: minmax(0, 1fr) minmax(112px, .9fr) minmax(0, 1fr); min-height: 115px; }
+      .team-logo { width: 42px; height: 42px; flex-basis: 42px; font-size: 13px; }
+      .team-city { font-size: 10px; white-space: normal; }
+      .team-nickname { font-size: 14px; white-space: normal; line-height: 1.2; }
+      .game-date { font-size: 11px; }
+      .game-time { font-size: 18px; }
+      .game-venue, .game-type { font-size: 11px; }
+      .details-button { margin-top: 1px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-strip">
+    <div class="top-inner">
+      <form class="search" id="search-form" role="search">
+        <input id="search-input" type="search" placeholder="搜索球队" aria-label="搜索球队">
+        <button type="submit" aria-label="搜索">⌕</button>
+      </form>
+      <div id="quick-teams" class="quick-teams" aria-label="关注的球队"></div>
+      <div class="top-arrows" aria-label="球队列表滚动">
+        <button class="icon-button" type="button" data-scroll="left" aria-label="向左滚动">‹</button>
+        <button class="icon-button" type="button" data-scroll="right" aria-label="向右滚动">›</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <section class="league-header" aria-label="联赛信息">
+      <div class="league-mark" aria-hidden="true">B</div>
+      <div class="league-title">
+        <h1>美国职业篮球联赛</h1>
+        <button id="league-follow" class="follow-league" type="button" aria-pressed="false">＋ 关注</button>
+      </div>
+    </section>
+
+    <nav class="main-nav" aria-label="联赛导航">
+      <button class="nav-link" type="button">主页</button>
+      <button class="nav-link" type="button">头条</button>
+      <button class="nav-link" type="button">分数</button>
+      <button class="nav-link active" type="button" aria-current="page">赛程</button>
+      <button class="nav-link" type="button">排名</button>
+      <button class="nav-link" type="button">锦标赛</button>
+    </nav>
+
+    <section id="schedule" aria-labelledby="schedule-heading">
+      <h2 id="schedule-heading" class="schedule-heading">赛程</h2>
+      <div class="date-row">
+        <div id="date-list" class="date-list" aria-label="选择比赛日期"></div>
+        <div class="date-arrows">
+          <button class="icon-button" type="button" data-date-scroll="left" aria-label="日期向前">‹</button>
+          <button class="icon-button" type="button" data-date-scroll="right" aria-label="日期向后">›</button>
+        </div>
+      </div>
+      <div id="games-grid" class="games-grid" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="game-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-content">
+      <div class="dialog-top">
+        <h2 id="dialog-title">比赛详情</h2>
+        <button id="dialog-close" class="dialog-close" type="button" aria-label="关闭">×</button>
+      </div>
+      <div id="dialog-matchup" class="dialog-matchup"></div>
+      <div id="dialog-meta" class="dialog-meta"></div>
+    </div>
+  </dialog>
+
+  <script>
+    const teams = {
+      cavaliers: { city: "克里夫兰", name: "骑士", short: "CLE", color: "#f5b52e", background: "#6f273c", outline: "#a98847", radius: "50% 50% 45% 45%" },
+      hawks: { city: "亚特兰大", name: "老鹰", short: "ATL", color: "#fff", background: "#c41230", outline: "#fff" },
+      kings: { city: "萨克拉门托", name: "国王", short: "SAC", color: "#fff", background: "#5a397e", outline: "#ddd" },
+      pelicans: { city: "新奥尔良", name: "鹈鹕", short: "NOP", color: "#e5bd53", background: "#173966", outline: "#b19049" },
+      grizzlies: { city: "孟菲斯", name: "灰熊", short: "MEM", color: "#8bb4ff", background: "#273c70", outline: "#b7c4e0", radius: "6px" },
+      blazers: { city: "波特兰", name: "开拓者", short: "POR", color: "#fff", background: "#202020", outline: "#d52b37", radius: "4px" },
+      suns: { city: "菲尼克斯", name: "太阳", short: "PHX", color: "#ffc94d", background: "#4b2a76", outline: "#e87530" },
+      warriors: { city: "金州", name: "勇士", short: "GSW", color: "#fff", background: "#285a9b", outline: "#f4c747" },
+      lakers: { city: "洛杉矶", name: "湖人", short: "LAL", color: "#f9d55b", background: "#542583", outline: "#f9d55b" },
+      celtics: { city: "波士顿", name: "凯尔特人", short: "BOS", color: "#fff", background: "#087448", outline: "#d9c99b" },
+      nuggets: { city: "丹佛", name: "掘金", short: "DEN", color: "#fff", background: "#174687", outline: "#f7c74d" }
+    };
+
+    const games = [
+      { id: "cavaliers-hawks", home: "cavaliers", away: "hawks", time: "08:00", venue: "菲利普斯球馆, 亚特兰大", date: "10月30日" },
+      { id: "kings-pelicans", home: "kings", away: "pelicans", time: "08:00", venue: "冰沙国王中心, New Orleans", date: "10月30日" },
+      { id: "grizzlies-blazers", home: "grizzlies", away: "blazers", time: "10:00", venue: "摩达中心, 波特兰", date: "10月30日" }
+    ];
+
+    const dates = ["10月24日", "10月25日", "10月26日", "10月27日", "10月28日", "10月29日", "10月30日", "11月1日", "11月2日", "11月3日", "11月5日", "11月6日", "11月8日", "11月9日", "11月10日"];
+    const followed = new Set(["kings", "suns", "warriors", "lakers", "celtics", "nuggets"]);
+    let selectedDate = "10月30日";
+    let searchQuery = "";
+    let toastTimer;
+
+    const dateList = document.querySelector("#date-list");
+    const gamesGrid = document.querySelector("#games-grid");
+    const quickTeams = document.querySelector("#quick-teams");
+    const searchInput = document.querySelector("#search-input");
+    const dialog = document.querySelector("#game-dialog");
+
+    function showToast(message) {
+      const toast = document.querySelector("#toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      window.clearTimeout(toastTimer);
+      toastTimer = window.setTimeout(() => toast.classList.remove("visible"), 2300);
+    }
+
+    function teamLabel(team) {
+      return `${team.city} ${team.name}`;
+    }
+
+    function renderDates() {
+      dateList.replaceChildren();
+      dates.forEach((date) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `date-pill${date === selectedDate ? " selected" : ""}`;
+        button.textContent = date;
+        button.setAttribute("aria-pressed", String(date === selectedDate));
+        button.addEventListener("click", () => {
+          selectedDate = date;
+          renderDates();
+          renderGames();
+        });
+        dateList.append(button);
+      });
+      const selectedButton = [...dateList.children].find((button) => button.textContent === selectedDate);
+      if (selectedButton) selectedButton.scrollIntoView({ block: "nearest", inline: "center" });
+    }
+
+    function renderQuickTeams() {
+      quickTeams.replaceChildren();
+      [...followed].forEach((teamId) => {
+        const team = teams[teamId];
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "quick-team followed";
+        button.setAttribute("aria-label", `取消关注${teamLabel(team)}`);
+        const icon = document.createElement("span");
+        icon.className = "team-mini";
+        icon.textContent = team.short === "SAC" ? "👑" : team.short === "PHX" ? "☀️" : team.short === "GSW" ? "🌉" : team.short === "LAL" ? "🏀" : team.short === "BOS" ? "☘️" : "⛏️";
+        const name = document.createElement("span");
+        name.textContent = teamLabel(team);
+        const plus = document.createElement("span");
+        plus.className = "quick-add";
+        plus.textContent = "✓";
+        button.append(icon, name, plus);
+        button.addEventListener("click", () => toggleFollow(teamId));
+        quickTeams.append(button);
+      });
+    }
+
+    function createTeamSide(teamId, side) {
+      const team = teams[teamId];
+      const container = document.createElement("div");
+      container.className = `team-side ${side}`;
+      const logo = document.createElement("div");
+      logo.className = "team-logo";
+      logo.style.setProperty("--team-bg", team.background);
+      logo.style.setProperty("--team-color", team.color);
+      logo.style.setProperty("--team-outline", team.outline);
+      logo.style.setProperty("--team-radius", team.radius || "50%");
+      logo.textContent = team.short;
+
+      const nameBlock = document.createElement("div");
+      nameBlock.className = "team-name";
+      const city = document.createElement("span");
+      city.className = "team-city";
+      city.textContent = team.city;
+      const nickname = document.createElement("span");
+      nickname.className = "team-nickname";
+      nickname.textContent = team.name;
+      const followButton = document.createElement("button");
+      followButton.type = "button";
+      followButton.className = `team-follow${followed.has(teamId) ? " followed" : ""}`;
+      followButton.setAttribute("aria-label", `${followed.has(teamId) ? "取消关注" : "关注"}${teamLabel(team)}`);
+      followButton.setAttribute("aria-pressed", String(followed.has(teamId)));
+      followButton.textContent = followed.has(teamId) ? "✓" : "+";
+      followButton.addEventListener("click", () => toggleFollow(teamId));
+      nameBlock.append(city, nickname, followButton);
+      container.append(logo, nameBlock);
+      return container;
+    }
+
+    function openDetails(game) {
+      const home = teams[game.home];
+      const away = teams[game.away];
+      document.querySelector("#dialog-title").textContent = `${home.name} 对阵 ${away.name}`;
+      document.querySelector("#dialog-matchup").innerHTML = `<span>${home.city} ${home.name}</span><strong>${game.time}</strong><span>${away.city} ${away.name}</span>`;
+      document.querySelector("#dialog-meta").textContent = `${game.date} · GMT+8\n比赛场馆：${game.venue}\n常规赛 · 赛前`;
+      dialog.showModal();
+    }
+
+    function renderGames() {
+      gamesGrid.replaceChildren();
+      const visibleGames = games.filter((game) => {
+        const matchesDate = game.date === selectedDate;
+        const home = teams[game.home];
+        const away = teams[game.away];
+        const searchable = `${home.city} ${home.name} ${home.short} ${away.city} ${away.name} ${away.short}`.toLowerCase();
+        return matchesDate && searchable.includes(searchQuery.toLowerCase());
+      });
+
+      if (visibleGames.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "empty-state";
+        empty.textContent = searchQuery
+          ? `没有找到与“${searchQuery}”匹配的比赛。试试球队名称或缩写。`
+          : `${selectedDate} 暂无演示赛程。当前示例比赛安排在 10月30日。`;
+        gamesGrid.append(empty);
+        return;
+      }
+
+      visibleGames.forEach((game) => {
+        const card = document.createElement("article");
+        card.className = "game-card";
+        card.setAttribute("aria-label", `${teams[game.home].name} 对阵 ${teams[game.away].name}`);
+        const layout = document.createElement("div");
+        layout.className = "game-layout";
+        layout.append(createTeamSide(game.home, "home"));
+
+        const info = document.createElement("div");
+        info.className = "game-info";
+        const date = document.createElement("div");
+        date.className = "game-date";
+        date.textContent = `${game.date} · GMT+8`;
+        const time = document.createElement("strong");
+        time.className = "game-time";
+        time.textContent = game.time;
+        const venue = document.createElement("div");
+        venue.className = "game-venue";
+        venue.textContent = game.venue;
+        const type = document.createElement("div");
+        type.className = "game-type";
+        type.textContent = "常规赛";
+        info.append(date, time, venue, type);
+        layout.append(info, createTeamSide(game.away, "away"));
+
+        const details = document.createElement("button");
+        details.type = "button";
+        details.className = "details-button";
+        details.textContent = "查看比赛详细信息";
+        details.addEventListener("click", () => openDetails(game));
+        card.append(layout, details);
+        gamesGrid.append(card);
+      });
+    }
+
+    function toggleFollow(teamId) {
+      if (followed.has(teamId)) {
+        followed.delete(teamId);
+        showToast(`已取消关注${teamLabel(teams[teamId])}`);
+      } else {
+        followed.add(teamId);
+        showToast(`已关注${teamLabel(teams[teamId])}`);
+      }
+      renderQuickTeams();
+      renderGames();
+    }
+
+    document.querySelector("#search-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      searchQuery = searchInput.value.trim();
+      renderGames();
+    });
+
+    searchInput.addEventListener("input", () => {
+      searchQuery = searchInput.value.trim();
+      renderGames();
+    });
+
+    document.querySelectorAll("[data-scroll]").forEach((button) => {
+      button.addEventListener("click", () => {
+        quickTeams.scrollBy({ left: button.dataset.scroll === "right" ? 220 : -220, behavior: "smooth" });
+      });
+    });
+
+    document.querySelectorAll("[data-date-scroll]").forEach((button) => {
+      button.addEventListener("click", () => {
+        dateList.scrollBy({ left: button.dataset.dateScroll === "right" ? 280 : -280, behavior: "smooth" });
+      });
+    });
+
+    document.querySelectorAll(".nav-link").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.querySelectorAll(".nav-link").forEach((item) => {
+          item.classList.remove("active");
+          item.removeAttribute("aria-current");
+        });
+        button.classList.add("active");
+        button.setAttribute("aria-current", "page");
+        if (button.textContent !== "赛程") showToast(`「${button.textContent}」栏目为页面导航示意`);
+      });
+    });
+
+    const leagueFollow = document.querySelector("#league-follow");
+    leagueFollow.addEventListener("click", () => {
+      const isFollowing = leagueFollow.getAttribute("aria-pressed") !== "true";
+      leagueFollow.setAttribute("aria-pressed", String(isFollowing));
+      leagueFollow.classList.toggle("is-following", isFollowing);
+      leagueFollow.textContent = isFollowing ? "✓ 已关注" : "＋ 关注";
+      showToast(isFollowing ? "已关注美国职业篮球联赛" : "已取消关注美国职业篮球联赛");
+    });
+
+    document.querySelector("#dialog-close").addEventListener("click", () => dialog.close());
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+
+    renderDates();
+    renderQuickTeams();
+    renderGames();
+  </script>
+</body>
+</html>

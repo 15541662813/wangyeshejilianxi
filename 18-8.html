@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07101c">
+  <title>全国智慧物流数据驾驶舱</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: #07101c;
+      color: #e8f4ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 50% 32%, rgb(12 67 92 / 20%), transparent 48%),
+        radial-gradient(ellipse at 8% 0%, rgb(22 66 91 / 17%), transparent 34%),
+        #07101c;
+    }
+
+    .dashboard { display: flex; min-height: 100vh; flex-direction: column; padding: 18px 22px 12px; }
+    .topbar, .brand, .header-meta, .panel-heading, .footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+    .topbar { flex: 0 0 auto; min-height: 55px; border-bottom: 1px solid #20384b; }
+    .brand { justify-content: flex-start; }
+    .brand-mark { display: grid; width: 35px; aspect-ratio: 1; place-items: center; border: 1px solid #337578; border-radius: 10px; background: #103039; color: #75e4d0; font-size: 15px; font-weight: 800; }
+    .brand-name { font-size: 11px; font-weight: 750; letter-spacing: .16em; }
+    .heading { margin-left: 7px; }
+    h1 { margin: 0; font-size: clamp(17px, 2vw, 23px); letter-spacing: .06em; }
+    .subtitle { margin: 4px 0 0; color: #758da3; font-size: 10px; letter-spacing: .1em; }
+    .header-meta { color: #8ca4ba; font-size: 10px; }
+    .live { display: inline-flex; align-items: center; gap: 7px; color: #9ce4d0; }
+    .live::before { width: 7px; height: 7px; border-radius: 50%; background: #62d7b4; box-shadow: 0 0 10px #62d7b4; content: ""; }
+    .clock { min-width: 145px; color: #a7bdd1; font-variant-numeric: tabular-nums; text-align: right; }
+
+    .main-grid {
+      display: grid;
+      flex: 1 1 auto;
+      min-height: 600px;
+      grid-template-columns: minmax(225px, .92fr) minmax(420px, 1.72fr) minmax(225px, .92fr);
+      gap: 14px;
+      padding: 14px 0;
+    }
+
+    .column { display: grid; min-height: 0; gap: 14px; }
+    .left-column, .right-column { grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+    .panel {
+      position: relative;
+      display: flex;
+      min-width: 0;
+      min-height: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid #1d394e;
+      border-radius: 9px;
+      background:
+        linear-gradient(140deg, rgb(15 34 51 / 92%), rgb(8 19 31 / 94%));
+      box-shadow: inset 0 1px 0 rgb(128 195 223 / 5%), 0 12px 32px rgb(0 0 0 / 16%);
+    }
+
+    .panel::before, .panel::after { position: absolute; z-index: 1; width: 14px; height: 14px; border-color: #4aa9a5; border-style: solid; content: ""; pointer-events: none; }
+    .panel::before { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+    .panel::after { right: -1px; bottom: -1px; border-width: 0 1px 1px 0; }
+    .panel-heading { z-index: 2; flex: 0 0 auto; min-height: 48px; padding: 10px 13px 8px; border-bottom: 1px solid rgb(39 71 91 / 66%); }
+    .panel-title { display: inline-flex; align-items: center; gap: 8px; margin: 0; color: #d7e8f6; font-size: 12px; font-weight: 650; letter-spacing: .04em; }
+    .panel-title::before { width: 3px; height: 13px; border-radius: 2px; background: #53cdbd; box-shadow: 0 0 8px rgb(83 205 189 / 45%); content: ""; }
+    .panel-unit { color: #718aa0; font-size: 9px; }
+    .chart { flex: 1 1 auto; min-width: 0; min-height: 0; }
+    .chart-error { display: none; padding: 14px; color: #ffc09f; font-size: 11px; line-height: 1.65; }
+
+    .map-panel { background: radial-gradient(ellipse at 50% 46%, rgb(17 60 76 / 26%), transparent 65%), #091725; }
+    .map-heading { min-height: 54px; }
+    .map-actions { display: inline-flex; align-items: center; gap: 8px; }
+    .map-tag { padding: 5px 8px; border: 1px solid #245064; border-radius: 99px; color: #73cfcb; font-size: 9px; letter-spacing: .09em; }
+    .map-chart { flex: 1 1 auto; min-height: 330px; }
+
+    .kpi-row { display: grid; flex: 0 0 100px; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 0 12px 12px; }
+    .kpi { display: flex; min-width: 0; flex-direction: column; justify-content: center; padding: 10px; border: 1px solid #203e50; border-radius: 7px; background: rgb(12 32 46 / 84%); }
+    .kpi-label { color: #8299ac; font-size: 9px; white-space: nowrap; }
+    .kpi-value { margin-top: 6px; color: #81ead6; font-size: clamp(17px, 2vw, 24px); font-weight: 720; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+    .kpi-value span { margin-left: 3px; color: #8da7ba; font-size: 9px; font-weight: 500; }
+    .kpi-change { margin-top: 3px; color: #61d6ac; font-size: 9px; }
+
+    .footer { flex: 0 0 auto; min-height: 27px; color: #667d92; font-size: 9px; }
+    .footer strong { color: #8da4b8; font-weight: 500; }
+
+    @media (min-width: 1500px) and (min-height: 850px) {
+      .dashboard { padding: 22px 30px 14px; }
+      .main-grid { gap: 16px; padding: 17px 0; }
+      .column { gap: 16px; }
+      .panel-heading { min-height: 54px; padding-right: 16px; padding-left: 16px; }
+      .map-heading { min-height: 58px; }
+      .kpi-row { flex-basis: 110px; padding-right: 16px; padding-left: 16px; }
+    }
+
+    @media (max-width: 1050px) {
+      .dashboard { padding-right: 14px; padding-left: 14px; }
+      .main-grid { grid-template-columns: minmax(195px, .85fr) minmax(350px, 1.5fr) minmax(195px, .85fr); gap: 9px; }
+      .column { gap: 9px; }
+      .panel-heading { padding-right: 9px; padding-left: 9px; }
+      .panel-title { font-size: 11px; }
+    }
+
+    @media (max-width: 780px) {
+      .dashboard { min-height: 100vh; padding: 12px; }
+      .topbar { flex-wrap: wrap; gap: 10px; padding-bottom: 10px; }
+      .header-meta { margin-left: auto; }
+      .main-grid { min-height: 0; grid-template-columns: 1fr 1fr; grid-template-areas: "map map" "left right"; align-items: stretch; }
+      .left-column { grid-area: left; }
+      .map-column { grid-area: map; }
+      .right-column { grid-area: right; }
+      .main-grid > .column { min-height: 520px; }
+      .map-column { min-height: 520px !important; }
+      .map-chart { min-height: 375px; }
+    }
+
+    @media (max-width: 540px) {
+      .main-grid { display: flex; flex-direction: column; }
+      .main-grid > .column { min-height: 450px; }
+      .map-column { min-height: 480px !important; }
+      .map-chart { min-height: 330px; }
+      .header-meta { gap: 8px; font-size: 9px; }
+      .clock { min-width: 128px; }
+      .footer { align-items: flex-start; flex-direction: column; justify-content: center; gap: 3px; padding-top: 4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="dashboard">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">物</span>
+        <div class="heading">
+          <h1>全国智慧物流数据驾驶舱</h1>
+          <p class="subtitle">NATIONAL SMART LOGISTICS · OPERATION OVERVIEW</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <span class="live">系统运行中</span>
+        <span class="clock" id="clock">----</span>
+      </div>
+    </header>
+
+    <section class="main-grid" aria-label="全国智慧物流数据大屏">
+      <div class="column left-column">
+        <article class="panel">
+          <header class="panel-heading">
+            <h2 class="panel-title">近 7 日订单趋势</h2>
+            <span class="panel-unit">单 / 日</span>
+          </header>
+          <div class="chart" id="trend-chart" role="img" aria-label="近七日物流订单量趋势图"></div>
+        </article>
+        <article class="panel">
+          <header class="panel-heading">
+            <h2 class="panel-title">运单状态分布</h2>
+            <span class="panel-unit">当前占比</span>
+          </header>
+          <div class="chart" id="status-chart" role="img" aria-label="物流运单揽收、运输、派送和签收状态分布图"></div>
+        </article>
+      </div>
+
+      <div class="column map-column">
+        <article class="panel map-panel">
+          <header class="panel-heading map-heading">
+            <div>
+              <h2 class="panel-title">全国运力与枢纽流向</h2>
+              <span class="panel-unit">省级订单密度 · 城市间物流流向</span>
+            </div>
+            <div class="map-actions"><span class="map-tag">LIVE MAP</span></div>
+          </header>
+          <div class="chart map-chart" id="china-map" role="img" aria-label="中国地图展示省级订单热度与主要城市物流流向">
+            <p class="chart-error" id="map-error" role="status"></p>
+          </div>
+          <div class="kpi-row" aria-label="物流核心运营指标">
+            <div class="kpi">
+              <span class="kpi-label">今日揽收</span>
+              <strong class="kpi-value">128.6<span>万件</span></strong>
+              <span class="kpi-change">▲ 8.3% 较昨日</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">平均时效</span>
+              <strong class="kpi-value">26.8<span>小时</span></strong>
+              <span class="kpi-change">▼ 1.6% 较昨日</span>
+            </div>
+            <div class="kpi">
+              <span class="kpi-label">妥投率</span>
+              <strong class="kpi-value">98.7<span>%</span></strong>
+              <span class="kpi-change">▲ 0.4% 较昨日</span>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <div class="column right-column">
+        <article class="panel">
+          <header class="panel-heading">
+            <h2 class="panel-title">区域订单 TOP 8</h2>
+            <span class="panel-unit">万件</span>
+          </header>
+          <div class="chart" id="region-chart" role="img" aria-label="物流区域订单量前八名排行"></div>
+        </article>
+        <article class="panel">
+          <header class="panel-heading">
+            <h2 class="panel-title">运输方式占比</h2>
+            <span class="panel-unit">今日运单</span>
+          </header>
+          <div class="chart" id="mode-chart" role="img" aria-label="航空、公路、铁路和水运物流运输方式占比"></div>
+        </article>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span><strong>数据说明：</strong>页面指标为演示数据，不代表真实物流运营信息。</span>
+      <span>地图边界与图表引擎由本地 CDN 资源提供</span>
+    </footer>
+  </main>
+
+  <script src="cdn/echarts.min.js"></script>
+  <script src="cdn/china-provinces.js"></script>
+  <script>
+    (() => {
+      const palette = {
+        teal: "#54d2c0",
+        blue: "#61b8f5",
+        cyan: "#58d2e3",
+        gold: "#f0bd69",
+        purple: "#9b8bea",
+        red: "#f07e82",
+        text: "#91a8bd",
+        grid: "rgba(101, 135, 160, .17)"
+      };
+      const chartElements = ["trend-chart", "status-chart", "china-map", "region-chart", "mode-chart"]
+        .map(id => document.getElementById(id));
+      const charts = [];
+      const numberFormatter = new Intl.NumberFormat("zh-CN");
+      const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", second: "2-digit",
+        hour12: false
+      });
+
+      function showMapError(message) {
+        const errorElement = document.getElementById("map-error");
+        errorElement.textContent = message;
+        errorElement.style.display = "block";
+        console.error(message);
+      }
+
+      function showChartError(element, error) {
+        console.error(`Chart initialization failed in #${element.id}:`, error);
+        const message = document.createElement("p");
+        message.className = "chart-error";
+        message.style.display = "block";
+        message.textContent = `图表初始化失败：${error instanceof Error ? error.message : String(error)}`;
+        element.appendChild(message);
+      }
+
+      function axisStyle() {
+        return {
+          axisLine: { lineStyle: { color: "#345067" } },
+          axisTick: { show: false },
+          axisLabel: { color: palette.text, fontSize: 9 },
+          splitLine: { lineStyle: { color: palette.grid, type: "dashed" } }
+        };
+      }
+
+      function initTrend() {
+        const chart = echarts.init(document.getElementById("trend-chart"));
+        charts.push(chart);
+        chart.setOption({
+          color: [palette.teal, palette.blue],
+          tooltip: {
+            trigger: "axis",
+            backgroundColor: "rgba(8, 21, 33, .95)",
+            borderColor: "#31566a",
+            textStyle: { color: "#eaf3fc", fontSize: 10 },
+            valueFormatter: value => `${numberFormatter.format(value)} 单`
+          },
+          legend: {
+            top: 7,
+            right: 10,
+            itemWidth: 8,
+            itemHeight: 8,
+            textStyle: { color: palette.text, fontSize: 9 }
+          },
+          grid: { top: 40, right: 13, bottom: 25, left: 47 },
+          xAxis: {
+            type: "category",
+            boundaryGap: false,
+            data: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
+            ...axisStyle()
+          },
+          yAxis: { type: "value", ...axisStyle() },
+          series: [
+            {
+              name: "揽收量",
+              type: "line",
+              smooth: .35,
+              symbol: "circle",
+              symbolSize: 5,
+              lineStyle: { width: 2 },
+              areaStyle: { opacity: .1 },
+              data: [86000, 93200, 91400, 105800, 112600, 124300, 128600]
+            },
+            {
+              name: "签收量",
+              type: "line",
+              smooth: .35,
+              symbol: "none",
+              lineStyle: { width: 1.5, type: "dashed" },
+              data: [80400, 88100, 85700, 98600, 105300, 116900, 120100]
+            }
+          ]
+        });
+      }
+
+      function initStatus() {
+        const chart = echarts.init(document.getElementById("status-chart"));
+        charts.push(chart);
+        chart.setOption({
+          color: [palette.teal, palette.blue, palette.gold, palette.purple],
+          tooltip: {
+            trigger: "item",
+            backgroundColor: "rgba(8, 21, 33, .95)",
+            borderColor: "#31566a",
+            textStyle: { color: "#eaf3fc", fontSize: 10 },
+            formatter: "{b}<br/>{c} 万件 · {d}%"
+          },
+          legend: {
+            bottom: 9,
+            left: "center",
+            itemWidth: 8,
+            itemHeight: 8,
+            itemGap: 14,
+            textStyle: { color: palette.text, fontSize: 9 }
+          },
+          graphic: [{
+            type: "text",
+            left: "center",
+            top: "38%",
+            style: {
+              text: "在途运单\n42.8万",
+              fill: "#dceaf5",
+              fontSize: 13,
+              fontWeight: 600,
+              lineHeight: 22,
+              textAlign: "center"
+            }
+          }],
+          series: [{
+            type: "pie",
+            radius: ["49%", "69%"],
+            center: ["50%", "43%"],
+            avoidLabelOverlap: true,
+            itemStyle: { borderColor: "#0d1d2b", borderWidth: 3 },
+            label: { show: false },
+            emphasis: {
+              scale: true,
+              scaleSize: 5,
+              label: { show: true, color: "#eaf3fc", fontSize: 10, formatter: "{b}\n{d}%" }
+            },
+            data: [
+              { name: "已签收", value: 62.4 },
+              { name: "运输中", value: 42.8 },
+              { name: "派送中", value: 18.6 },
+              { name: "待揽收", value: 12.3 }
+            ]
+          }]
+        });
+      }
+
+      function initRegions() {
+        const chart = echarts.init(document.getElementById("region-chart"));
+        charts.push(chart);
+        const regions = [
+          ["广东", 28.6], ["江苏", 24.2], ["浙江", 22.8], ["上海", 19.7],
+          ["山东", 17.4], ["北京", 15.9], ["四川", 13.8], ["河南", 12.6]
+        ];
+        chart.setOption({
+          grid: { top: 12, right: 26, bottom: 16, left: 48 },
+          tooltip: {
+            trigger: "axis",
+            axisPointer: { type: "shadow" },
+            backgroundColor: "rgba(8, 21, 33, .95)",
+            borderColor: "#31566a",
+            textStyle: { color: "#eaf3fc", fontSize: 10 },
+            valueFormatter: value => `${value} 万件`
+          },
+          xAxis: {
+            type: "value",
+            ...axisStyle(),
+            axisLabel: { color: palette.text, fontSize: 9 },
+            splitNumber: 4
+          },
+          yAxis: {
+            type: "category",
+            inverse: true,
+            data: regions.map(item => item[0]),
+            axisLine: { show: false },
+            axisTick: { show: false },
+            axisLabel: { color: "#b1c2d0", fontSize: 10 }
+          },
+          series: [{
+            type: "bar",
+            barWidth: 11,
+            showBackground: true,
+            backgroundStyle: { color: "rgba(74, 105, 127, .12)", borderRadius: 6 },
+            itemStyle: {
+              borderRadius: [0, 6, 6, 0],
+              color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                { offset: 0, color: palette.teal },
+                { offset: 1, color: "#23788d" }
+              ])
+            },
+            label: { show: true, position: "right", color: "#b4c9d8", fontSize: 9, formatter: "{c}" },
+            data: regions.map(item => item[1])
+          }]
+        });
+      }
+
+      function initModes() {
+        const chart = echarts.init(document.getElementById("mode-chart"));
+        charts.push(chart);
+        chart.setOption({
+          color: [palette.blue, palette.teal, palette.gold, palette.purple],
+          tooltip: {
+            trigger: "item",
+            backgroundColor: "rgba(8, 21, 33, .95)",
+            borderColor: "#31566a",
+            textStyle: { color: "#eaf3fc", fontSize: 10 },
+            formatter: "{b}<br/>{c}%"
+          },
+          legend: {
+            orient: "vertical",
+            right: 10,
+            top: "middle",
+            itemWidth: 8,
+            itemHeight: 8,
+            itemGap: 13,
+            textStyle: { color: palette.text, fontSize: 9 }
+          },
+          graphic: [{
+            type: "text",
+            left: "26%",
+            top: "43%",
+            style: {
+              text: "运输方式\n实时占比",
+              fill: "#c5d8e7",
+              fontSize: 10,
+              lineHeight: 17,
+              textAlign: "center"
+            }
+          }],
+          series: [{
+            type: "pie",
+            radius: ["54%", "73%"],
+            center: ["31%", "50%"],
+            itemStyle: { borderColor: "#0d1d2b", borderWidth: 3 },
+            label: { show: false },
+            emphasis: { scale: true, scaleSize: 5, label: { show: true, color: "#f0f7ff", fontSize: 10, formatter: "{d}%" } },
+            data: [
+              { name: "公路", value: 56 },
+              { name: "航空", value: 21 },
+              { name: "铁路", value: 17 },
+              { name: "水运", value: 6 }
+            ]
+          }]
+        });
+      }
+
+      function city(name, value) { return { name, value }; }
+      function initMap(geoJSON) {
+        echarts.registerMap("china-dashboard", geoJSON);
+        const chart = echarts.init(document.getElementById("china-map"));
+        charts.push(chart);
+        const provinceValues = [
+          ["北京市", 92], ["天津市", 63], ["河北省", 55], ["山西省", 29], ["内蒙古自治区", 24],
+          ["辽宁省", 47], ["吉林省", 24], ["黑龙江省", 25], ["上海市", 97], ["江苏省", 93],
+          ["浙江省", 91], ["安徽省", 61], ["福建省", 59], ["江西省", 51], ["山东省", 78],
+          ["河南省", 58], ["湖北省", 53], ["湖南省", 56], ["广东省", 100], ["广西壮族自治区", 49],
+          ["海南省", 31], ["重庆市", 48], ["四川省", 68], ["贵州省", 36], ["云南省", 42],
+          ["西藏自治区", 12], ["陕西省", 44], ["甘肃省", 25], ["青海省", 14], ["宁夏回族自治区", 21],
+          ["新疆维吾尔自治区", 18], ["台湾省", 34], ["香港特别行政区", 28], ["澳门特别行政区", 19]
+        ].map(([name, value]) => ({ name, value }));
+
+        const cities = [
+          city("北京", [116.40, 39.90, 88]),
+          city("上海", [121.47, 31.23, 96]),
+          city("广州", [113.27, 23.13, 100]),
+          city("深圳", [114.06, 22.55, 85]),
+          city("成都", [104.07, 30.67, 68]),
+          city("武汉", [114.31, 30.59, 57]),
+          city("西安", [108.94, 34.34, 49]),
+          city("郑州", [113.62, 34.75, 58]),
+          city("杭州", [120.16, 30.27, 81]),
+          city("乌鲁木齐", [87.62, 43.82, 25]),
+          city("昆明", [102.83, 24.88, 39]),
+          city("沈阳", [123.43, 41.80, 46])
+        ];
+        const routes = [
+          { fromName: "上海", toName: "北京", coords: [[121.47, 31.23], [116.40, 39.90]], value: 94 },
+          { fromName: "广州", toName: "上海", coords: [[113.27, 23.13], [121.47, 31.23]], value: 88 },
+          { fromName: "深圳", toName: "成都", coords: [[114.06, 22.55], [104.07, 30.67]], value: 73 },
+          { fromName: "杭州", toName: "武汉", coords: [[120.16, 30.27], [114.31, 30.59]], value: 66 },
+          { fromName: "北京", toName: "沈阳", coords: [[116.40, 39.90], [123.43, 41.80]], value: 52 },
+          { fromName: "西安", toName: "乌鲁木齐", coords: [[108.94, 34.34], [87.62, 43.82]], value: 41 },
+          { fromName: "广州", toName: "昆明", coords: [[113.27, 23.13], [102.83, 24.88]], value: 48 },
+          { fromName: "郑州", toName: "上海", coords: [[113.62, 34.75], [121.47, 31.23]], value: 60 }
+        ];
+
+        chart.setOption({
+          backgroundColor: "transparent",
+          tooltip: {
+            trigger: "item",
+            backgroundColor: "rgba(7, 18, 30, .96)",
+            borderColor: "#3d7086",
+            textStyle: { color: "#eaf3fc", fontSize: 11 },
+            formatter(params) {
+              if (params.seriesType === "map") return `${params.name}<br/>区域热度：${params.value ?? "暂无"}<br/>示意指数`;
+              if (params.seriesName === "枢纽城市") return `${params.name}<br/>今日处理量：${params.value[2]} 千件`;
+              if (params.seriesName === "物流流向") return `${params.data.fromName} → ${params.data.toName}<br/>流量指数：${params.data.value}`;
+              return params.name || params.seriesName;
+            }
+          },
+          visualMap: {
+            type: "continuous",
+            min: 10,
+            max: 100,
+            calculable: false,
+            seriesIndex: 0,
+            orient: "horizontal",
+            left: "center",
+            bottom: 7,
+            itemWidth: 105,
+            itemHeight: 7,
+            text: ["高", "低"],
+            textGap: 6,
+            textStyle: { color: "#8da6ba", fontSize: 9 },
+            inRange: { color: ["#112d42", "#155e71", "#19a394", "#6ae0b9"] },
+            outOfRange: { color: ["#142536"] }
+          },
+          geo: {
+            map: "china-dashboard",
+            roam: true,
+            top: 17,
+            left: 13,
+            right: 13,
+            bottom: 36,
+            zoom: 1.12,
+            label: { show: false },
+            itemStyle: {
+              areaColor: "#102d41",
+              borderColor: "#3b8090",
+              borderWidth: .8,
+              shadowColor: "rgba(43, 170, 172, .2)",
+              shadowBlur: 9
+            },
+            emphasis: {
+              label: { show: true, color: "#d5f4ed", fontSize: 9 },
+              itemStyle: { areaColor: "#21766f" }
+            },
+            select: { itemStyle: { areaColor: "#268c7b" } }
+          },
+          series: [
+            {
+              name: "区域订单热度",
+              type: "map",
+              map: "china-dashboard",
+              geoIndex: 0,
+              data: provinceValues,
+              emphasis: { label: { show: true, color: "#e1fbf2" } }
+            },
+            {
+              name: "物流流向",
+              type: "lines",
+              coordinateSystem: "geo",
+              zlevel: 2,
+              effect: { show: true, period: 5, trailLength: .2, symbol: "arrow", symbolSize: 5, color: "#a9f6dd" },
+              lineStyle: { color: "#62dcca", width: 1.2, opacity: .45, curveness: .22 },
+              data: routes
+            },
+            {
+              name: "枢纽城市",
+              type: "effectScatter",
+              coordinateSystem: "geo",
+              zlevel: 3,
+              rippleEffect: { brushType: "stroke", scale: 3, period: 4 },
+              symbolSize: value => Math.max(6, Math.min(12, value[2] / 11)),
+              itemStyle: { color: "#ffe38a", shadowBlur: 9, shadowColor: "#ffe38a" },
+              label: {
+                show: true,
+                formatter: "{b}",
+                position: "right",
+                color: "#c7dae7",
+                fontSize: 9,
+                distance: 4
+              },
+              data: cities
+            }
+          ]
+        });
+      }
+
+      function updateClock() {
+        document.getElementById("clock").textContent = dateFormatter.format(new Date());
+      }
+
+      if (!window.echarts) {
+        showMapError("ECharts 加载失败，请确认 cdn/echarts.min.js 文件存在。");
+        chartElements.filter(element => element.id !== "china-map").forEach(element => {
+          const error = document.createElement("p");
+          error.className = "chart-error";
+          error.style.display = "block";
+          error.textContent = "图表引擎加载失败，请检查本地 ECharts CDN 文件。";
+          element.appendChild(error);
+        });
+        return;
+      }
+
+      [
+        [initTrend, document.getElementById("trend-chart")],
+        [initStatus, document.getElementById("status-chart")],
+        [initRegions, document.getElementById("region-chart")],
+        [initModes, document.getElementById("mode-chart")]
+      ].forEach(([initialize, element]) => {
+        try {
+          initialize();
+        } catch (error) {
+          showChartError(element, error);
+        }
+      });
+
+      if (!window.CHINA_PROVINCES) {
+        showMapError("中国地图数据脚本加载失败，请确认 cdn/china-provinces.js 文件存在。");
+      } else {
+        try {
+          initMap(window.CHINA_PROVINCES);
+        } catch (error) {
+          showMapError(`中国地图初始化失败：${error.message}`);
+        }
+      }
+
+      const resizeObserver = new ResizeObserver(() => charts.forEach(chart => chart.resize()));
+      chartElements.forEach(element => resizeObserver.observe(element));
+      updateClock();
+      const clockTimer = window.setInterval(updateClock, 1000);
+      window.addEventListener("pagehide", () => {
+        window.clearInterval(clockTimer);
+        resizeObserver.disconnect();
+        charts.forEach(chart => chart.dispose());
+      }, { once: true });
+    })();
+  </script>
+</body>
+</html>

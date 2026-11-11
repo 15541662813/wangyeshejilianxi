@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上图下文</title>
+     <style>
+        *{
+            padding: 0;
+            margin: 0;
+        }
+        ul{
+            list-style: none;
+        }
+        /* ul类名是 ilist，所以选择器写 .ilist */
+        .ilist{
+            display: flex; /* 开启弹性布局，li横向排列 */
+        }
+        .ilist li{
+            width: 30%;
+            margin-right: 3px;
+            flex-grow:1;
+        }
+        .ilist img{
+            width: 100%;
+        }
+        .ilist p{
+            text-align: center;
+            font-size: 14px;
+            line-height: 33px;
+        }
+    </style>
+</head>
+
+<body>
+    <ul class="ilist">
+        <li>
+            <img src="./img/111.jpg" alt="图片1">
+            <p>王大军的上图下文</p>
+        </li>
+        <li>
+            <img src="./img/222.jpg" alt="图片2">
+            <p>图片2</p>
+        </li>
+        <li>
+            <img src="./img/333.jpg" alt="图片3">
+            <p>图片3</p>
+        </li>
+    </ul>
+</body>
+</html>

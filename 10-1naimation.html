@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>CSS 背景颜色动画</title>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			min-height: 100vh;
+			margin: 0;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			background-color: #f3f4f6;
+		}
+
+		.box {
+			width: 200px;
+			height: 200px;
+			animation: color-change 8s infinite, box-pulse 2s ease-in-out infinite alternate;
+		}
+
+		@keyframes color-change {
+			0% {
+				background-color: #ff4d4f;
+			}
+			25% {
+				background-color: #ffd43b;
+			}
+			50% {
+				background-color: #40c463;
+			}
+			75% {
+				background-color: #339af0;
+			}
+			100% {
+				background-color: #ff4d4f;
+			}
+		}
+
+		@keyframes box-pulse {
+			from {
+				transform: scale(1);
+			}
+			to {
+				transform: scale(1.15);
+			}
+		}
+	</style>
+</head>
+<body>
+	<div class="box"></div>
+</body>
+</html>

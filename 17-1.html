@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08111f">
+  <title>Canvas 粒子文字动画 · 王大军</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: #08111f;
+      color: #eef6ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at 50% 45%, rgb(18 64 102 / 36%), transparent 48%),
+        #08111f;
+    }
+
+    .scene { position: relative; min-height: 100vh; isolation: isolate; }
+    #particle-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      min-height: 100vh;
+      align-content: space-between;
+      padding: clamp(24px, 5vw, 64px);
+      pointer-events: none;
+    }
+
+    .topline, .bottomline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand, .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: #b6c8dc;
+      font-size: 12px;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 32px;
+      aspect-ratio: 1;
+      place-items: center;
+      border: 1px solid rgb(116 205 255 / 55%);
+      border-radius: 50%;
+      color: #79d4ff;
+      font-size: 14px;
+      letter-spacing: 0;
+    }
+
+    .status::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #66e4c1;
+      box-shadow: 0 0 12px #66e4c1;
+      content: "";
+    }
+
+    .center-copy {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: min(90vw, 800px);
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 18px;
+      color: #8eb6d1;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .34em;
+    }
+
+    h1 {
+      margin: 0;
+      color: #f5fbff;
+      font-size: clamp(58px, 14vw, 150px);
+      font-weight: 750;
+      letter-spacing: .12em;
+      line-height: 1.15;
+      text-indent: .12em;
+      text-shadow: 0 0 42px rgb(83 195 255 / 27%);
+    }
+
+    .subtitle {
+      margin: 20px 0 0;
+      color: #9bb2c9;
+      font-size: clamp(12px, 2vw, 15px);
+      letter-spacing: .2em;
+    }
+
+    .bottomline {
+      color: #7890a8;
+      font-size: 11px;
+      letter-spacing: .14em;
+    }
+
+    .toggle {
+      pointer-events: auto;
+      padding: 9px 14px;
+      border: 1px solid rgb(151 191 222 / 30%);
+      border-radius: 99px;
+      background: rgb(11 27 44 / 64%);
+      color: #d7e8f7;
+      cursor: pointer;
+      font: inherit;
+      letter-spacing: .04em;
+    }
+
+    .toggle:hover { border-color: #79d4ff; color: #fff; }
+    .toggle:focus-visible { outline: 2px solid #79d4ff; outline-offset: 3px; }
+
+    @media (max-width: 520px) {
+      .content { padding: 22px 18px; }
+      .brand, .status { font-size: 10px; letter-spacing: .1em; }
+      .bottomline { font-size: 9px; }
+      .bottomline > span:first-child { max-width: 145px; line-height: 1.6; }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene">
+    <canvas id="particle-canvas" aria-hidden="true"></canvas>
+    <div class="content">
+      <header class="topline">
+        <div class="brand"><span class="brand-mark">W</span><span>CANVAS STUDY · 17—1</span></div>
+        <span class="status">PARTICLE MOTION</span>
+      </header>
+      <section class="center-copy" aria-label="王大军 Canvas 粒子文字动画">
+        <p class="eyebrow">A NAME IN MOTION</p>
+        <h1>王大军</h1>
+        <p class="subtitle">光点汇聚，描绘每一个名字</p>
+      </section>
+      <footer class="bottomline">
+        <span>移动鼠标，感受粒子的流动</span>
+        <button class="toggle" type="button" aria-pressed="false">暂停动画</button>
+      </footer>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const canvas = document.querySelector("#particle-canvas");
+      const context = canvas.getContext("2d");
+      const button = document.querySelector(".toggle");
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      const offscreen = document.createElement("canvas");
+      const maskContext = offscreen.getContext("2d", { willReadFrequently: true });
+      const pointer = { x: -1000, y: -1000 };
+      let particles = [];
+      let targets = [];
+      let width = 0;
+      let height = 0;
+      let frame = 0;
+      let paused = reducedMotion.matches;
+      let animationId = 0;
+
+      function makeTargets() {
+        offscreen.width = width;
+        offscreen.height = height;
+        maskContext.clearRect(0, 0, width, height);
+        const fontSize = Math.min(width * 0.235, height * 0.28, 158);
+        maskContext.font = `700 ${fontSize}px "Microsoft YaHei", "Noto Sans CJK SC", sans-serif`;
+        maskContext.textAlign = "center";
+        maskContext.textBaseline = "middle";
+        maskContext.fillStyle = "#fff";
+        maskContext.fillText("王大军", width / 2, height / 2);
+
+        const pixels = maskContext.getImageData(0, 0, width, height).data;
+        targets = [];
+        const step = width < 600 ? 5 : 6;
+        for (let y = 0; y < height; y += step) {
+          for (let x = 0; x < width; x += step) {
+            if (pixels[(y * width + x) * 4 + 3] > 120) {
+              targets.push({ x, y });
+            }
+          }
+        }
+
+        particles = targets.map((target, index) => ({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          targetX: target.x,
+          targetY: target.y,
+          phase: Math.random() * Math.PI * 2,
+          size: index % 8 === 0 ? 1.8 : 1.25,
+          speed: 0.025 + Math.random() * 0.035
+        }));
+      }
+
+      function resize() {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        width = window.innerWidth;
+        height = window.innerHeight;
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        makeTargets();
+        draw();
+      }
+
+      function draw() {
+        animationId = 0;
+        context.clearRect(0, 0, width, height);
+        const time = frame * 0.012;
+
+        for (const particle of particles) {
+          const driftX = Math.sin(time + particle.phase) * 3;
+          const driftY = Math.cos(time * 0.8 + particle.phase) * 3;
+          const dx = particle.targetX + driftX - particle.x;
+          const dy = particle.targetY + driftY - particle.y;
+          const pointerDx = particle.x - pointer.x;
+          const pointerDy = particle.y - pointer.y;
+          const distance = Math.hypot(pointerDx, pointerDy);
+          let repelX = 0;
+          let repelY = 0;
+          if (distance < 105 && distance > 0) {
+            const force = (105 - distance) / 105 * 13;
+            repelX = pointerDx / distance * force;
+            repelY = pointerDy / distance * force;
+          }
+
+          particle.x += dx * particle.speed + repelX;
+          particle.y += dy * particle.speed + repelY;
+          const glow = 0.52 + (Math.sin(time * 2 + particle.phase) + 1) * 0.22;
+          context.beginPath();
+          context.fillStyle = `rgba(116, 211, 255, ${glow})`;
+          context.shadowColor = "#48bfff";
+          context.shadowBlur = particle.size > 1.5 ? 13 : 7;
+          context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+          context.fill();
+        }
+        context.shadowBlur = 0;
+        frame += 1;
+        if (!paused) animationId = requestAnimationFrame(draw);
+      }
+
+      function updateButton() {
+        button.textContent = paused ? "播放动画" : "暂停动画";
+        button.setAttribute("aria-pressed", String(paused));
+      }
+
+      button.addEventListener("click", () => {
+        paused = !paused;
+        updateButton();
+        if (!paused && !animationId) animationId = requestAnimationFrame(draw);
+      });
+      window.addEventListener("resize", resize);
+      window.addEventListener("pointermove", (event) => {
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+      }, { passive: true });
+      window.addEventListener("pointerleave", () => {
+        pointer.x = -1000;
+        pointer.y = -1000;
+      });
+      reducedMotion.addEventListener("change", (event) => {
+        paused = event.matches;
+        updateButton();
+        if (paused) cancelAnimationFrame(animationId);
+        else if (!animationId) animationId = requestAnimationFrame(draw);
+      });
+
+      resize();
+      updateButton();
+    })();
+  </script>
+</body>
+</html>

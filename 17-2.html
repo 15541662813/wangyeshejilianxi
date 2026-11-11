@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#07111f">
+  <title>Canvas 电商全站系统架构图</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: #07111f;
+      color: #ecf4ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 78% 0%, rgb(24 76 112 / 22%), transparent 42rem),
+        #07111f;
+    }
+
+    .page { width: min(1440px, calc(100% - 48px)); margin: 0 auto; padding: 38px 0 30px; }
+    .topbar, .heading, .diagram-meta, .legend { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .topbar { color: #93abc1; font-size: 11px; letter-spacing: .17em; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #d7e7f6; font-weight: 700; }
+    .brand-mark { display: grid; width: 30px; aspect-ratio: 1; place-items: center; border: 1px solid #396484; border-radius: 9px; color: #60d4c3; }
+    .live { display: inline-flex; align-items: center; gap: 8px; }
+    .live::before { width: 7px; height: 7px; border-radius: 50%; background: #5ee2bb; box-shadow: 0 0 12px #5ee2bb; content: ""; }
+
+    .heading { align-items: flex-end; padding: 48px 0 27px; }
+    .eyebrow { margin: 0 0 10px; color: #60d4c3; font-size: 11px; font-weight: 700; letter-spacing: .23em; }
+    h1 { margin: 0; font-size: clamp(29px, 4vw, 43px); letter-spacing: -.04em; }
+    .intro { max-width: 370px; margin: 0 0 3px; color: #98adc2; font-size: 13px; line-height: 1.8; }
+
+    .diagram-shell {
+      overflow: auto;
+      border: 1px solid #243b52;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgb(13 29 47 / 96%), rgb(8 19 33 / 98%));
+      box-shadow: 0 24px 70px rgb(0 0 0 / 22%);
+      scrollbar-color: #36536e #0c1a2a;
+    }
+
+    #architecture-canvas { display: block; width: 1200px; height: 750px; max-width: none; }
+    .diagram-meta { min-height: 53px; padding: 0 17px; color: #8199b0; font-size: 11px; }
+    .diagram-meta strong { color: #b7cde0; font-weight: 600; }
+    .legend { justify-content: flex-start; flex-wrap: wrap; gap: 16px; }
+    .legend-item { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+    .legend-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--color); box-shadow: 0 0 9px var(--color); }
+
+    .detail {
+      min-height: 54px;
+      margin-top: 15px;
+      padding: 14px 17px;
+      border: 1px solid #20384f;
+      border-radius: 11px;
+      background: rgb(13 29 47 / 72%);
+      color: #9bb1c6;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .detail strong { margin-right: 9px; color: #e7f2fc; font-size: 13px; }
+    .note { margin: 17px 0 0; color: #7189a0; font-size: 11px; line-height: 1.7; }
+
+    @media (max-width: 700px) {
+      .page { width: calc(100% - 28px); padding-top: 23px; }
+      .heading { display: block; padding: 37px 0 21px; }
+      .intro { margin-top: 12px; }
+      .topbar { font-size: 9px; }
+      #architecture-canvas { width: 1050px; height: 690px; }
+      .diagram-meta { align-items: flex-start; flex-direction: column; justify-content: center; gap: 9px; padding: 12px 14px; }
+      .legend { gap: 10px; font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">E</span><span>ECOMMERCE PLATFORM · 17—2</span></div>
+      <span class="live">SYSTEM OVERVIEW</span>
+    </header>
+    <section class="heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">CANVAS ARCHITECTURE MAP</p>
+        <h1 id="page-title">电商全站系统架构</h1>
+      </div>
+      <p class="intro">从用户触点、接入层到核心业务服务与数据底座，完整呈现一个电商平台的系统全景。</p>
+    </section>
+    <section class="diagram-shell" aria-label="可横向滚动的电商系统架构 Canvas 图">
+      <canvas id="architecture-canvas" width="1200" height="750" role="img" aria-label="电商平台分层架构图，包含用户端、接入层、业务服务、数据平台和基础设施"></canvas>
+      <div class="diagram-meta">
+        <strong>电商平台 · 逻辑架构视图</strong>
+        <div class="legend" aria-label="系统模块图例">
+          <span class="legend-item"><i class="legend-dot" style="--color:#60d4c3"></i>用户触点</span>
+          <span class="legend-item"><i class="legend-dot" style="--color:#64aef5"></i>接入与治理</span>
+          <span class="legend-item"><i class="legend-dot" style="--color:#b79cff"></i>业务服务</span>
+          <span class="legend-item"><i class="legend-dot" style="--color:#f3b86a"></i>数据与基础设施</span>
+        </div>
+      </div>
+    </section>
+    <aside class="detail" aria-live="polite">
+      <strong id="detail-title">交互提示</strong>
+      <span id="detail-copy">将鼠标悬停在架构模块上，查看模块职责；流动光点表示典型请求与数据流向。</span>
+    </aside>
+    <p class="note">架构示意：实际部署可按业务规模拆分服务，并通过统一鉴权、监控告警、日志追踪与弹性伸缩保障系统稳定运行。</p>
+  </main>
+  <script>
+    (() => {
+      const canvas = document.querySelector("#architecture-canvas");
+      const ctx = canvas.getContext("2d");
+      const title = document.querySelector("#detail-title");
+      const copy = document.querySelector("#detail-copy");
+      const width = 1200;
+      const height = 750;
+      const colors = {
+        user: { stroke: "#2b756f", fill: "#123d42", accent: "#60d4c3" },
+        edge: { stroke: "#35648c", fill: "#122f4a", accent: "#64aef5" },
+        service: { stroke: "#5c4d87", fill: "#282548", accent: "#b79cff" },
+        data: { stroke: "#80623c", fill: "#3d3021", accent: "#f3b86a" }
+      };
+      const layers = [
+        { label: "01  用户触点", sub: "多端接入", y: 58, color: colors.user },
+        { label: "02  接入与治理", sub: "统一入口", y: 177, color: colors.edge },
+        { label: "03  核心业务服务", sub: "微服务域", y: 296, color: colors.service },
+        { label: "04  数据平台", sub: "数据服务", y: 465, color: colors.data },
+        { label: "05  基础设施", sub: "云原生底座", y: 604, color: colors.data }
+      ];
+      const nodes = [
+        { id: "web", label: "Web 商城", sub: "PC / H5", x: 260, y: 80, w: 170, group: "user", info: "面向消费者的 Web 商城，承载商品浏览、搜索、下单、支付与会员中心等前台体验。" },
+        { id: "app", label: "移动 App", sub: "iOS / Android", x: 515, y: 80, w: 170, group: "user", info: "移动端应用，通过统一 API 接入平台服务，提供个性化首页、消息通知与便捷购物体验。" },
+        { id: "mini", label: "小程序 / 运营端", sub: "微信生态 · 商家后台", x: 770, y: 80, w: 210, group: "user", info: "小程序触达微信生态用户；运营与商家后台用于商品、订单、活动及店铺管理。" },
+        { id: "cdn", label: "CDN / WAF", sub: "静态加速 · 安全防护", x: 260, y: 199, w: 190, group: "edge", info: "CDN 缓存静态资源并就近加速；WAF 在流量到达应用前识别并拦截常见 Web 攻击。" },
+        { id: "gateway", label: "API 网关", sub: "路由 · 限流 · 鉴权", x: 530, y: 199, w: 190, group: "edge", info: "统一 API 入口，负责请求路由、身份校验、限流熔断、协议转换与访问日志采集。" },
+        { id: "auth", label: "身份与消息", sub: "SSO · 短信 / 推送", x: 800, y: 199, w: 190, group: "edge", info: "统一身份认证与会话管理，并对接短信、邮件和推送等通知通道。" },
+        { id: "catalog", label: "商品与搜索", sub: "SPU / SKU · 检索", x: 245, y: 318, w: 190, group: "service", info: "维护商品类目、SPU/SKU、价格与库存展示，并提供关键词、筛选和排序检索能力。" },
+        { id: "trade", label: "交易与订单", sub: "购物车 · 订单", x: 485, y: 318, w: 190, group: "service", info: "处理购物车、订单创建与状态流转，保证下单链路的业务规则与一致性。" },
+        { id: "payment", label: "支付与结算", sub: "支付 · 退款 · 对账", x: 725, y: 318, w: 190, group: "service", info: "对接支付渠道，处理支付回调、退款、账单核对与商家结算。" },
+        { id: "fulfillment", label: "库存与履约", sub: "仓储 · 物流", x: 965, y: 318, w: 190, group: "service", info: "管理库存预占与释放、仓库出库、物流轨迹以及订单履约状态。" },
+        { id: "member", label: "会员与营销", sub: "积分 · 优惠券 · 活动", x: 365, y: 390, w: 210, group: "service", info: "管理会员等级、积分权益、优惠券和促销活动，支持业务增长与用户留存。" },
+        { id: "support", label: "客服与风控", sub: "售后 · 规则引擎", x: 735, y: 390, w: 210, group: "service", info: "提供售后工单与客服协同，并通过规则引擎识别异常订单和交易风险。" },
+        { id: "mysql", label: "MySQL", sub: "交易 · 用户 · 商品", x: 260, y: 487, w: 190, group: "data", info: "保存订单、账户、商品等核心业务数据，承担事务处理和关系查询。" },
+        { id: "redis", label: "Redis", sub: "缓存 · 会话 · 分布式锁", x: 530, y: 487, w: 190, group: "data", info: "提供热点数据缓存、会话存储、计数器与分布式协调能力，降低核心数据库压力。" },
+        { id: "search", label: "Elasticsearch", sub: "商品索引 · 日志检索", x: 800, y: 487, w: 190, group: "data", info: "提供商品全文检索与聚合能力，也可用于集中检索系统日志。" },
+        { id: "mq", label: "消息队列", sub: "异步解耦 · 事件通知", x: 260, y: 556, w: 190, group: "data", info: "以异步事件连接订单、支付、库存和通知等流程，缓冲流量并降低服务间耦合。" },
+        { id: "warehouse", label: "数据仓库 / BI", sub: "报表 · 用户分析", x: 800, y: 556, w: 190, group: "data", info: "汇总业务数据用于经营报表、销售分析、用户分群和运营决策。" },
+        { id: "cloud", label: "容器云 · CI/CD", sub: "弹性伸缩 · 自动发布", x: 260, y: 636, w: 250, group: "data", info: "通过容器编排和 CI/CD 支持服务部署、滚动升级、资源调度及弹性扩缩。" },
+        { id: "observability", label: "可观测性与安全", sub: "监控 · 日志 · 链路追踪", x: 570, y: 636, w: 250, group: "data", info: "集中监控指标、日志与调用链，配合告警和安全审计快速定位线上问题。" },
+        { id: "backup", label: "备份与容灾", sub: "多可用区 · 数据恢复", x: 880, y: 636, w: 230, group: "data", info: "采用多可用区部署、定期备份和恢复演练，提升服务可用性与数据可靠性。" }
+      ];
+      const links = [
+        ["web", "cdn"], ["app", "cdn"], ["mini", "cdn"], ["cdn", "gateway"], ["gateway", "auth"],
+        ["gateway", "catalog"], ["gateway", "trade"], ["gateway", "member"], ["gateway", "support"],
+        ["catalog", "mysql"], ["catalog", "search"], ["trade", "mysql"], ["trade", "redis"],
+        ["trade", "payment"], ["trade", "fulfillment"], ["trade", "mq"], ["payment", "mq"],
+        ["member", "mysql"], ["member", "redis"], ["support", "mq"], ["fulfillment", "mysql"],
+        ["mq", "warehouse"], ["mysql", "warehouse"], ["redis", "observability"], ["search", "observability"]
+      ];
+      const nodeById = new Map(nodes.map(node => [node.id, node]));
+      let hoveredNode = null;
+      let animationId = 0;
+      let elapsed = 0;
+
+      function roundRect(x, y, w, h, radius) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, radius);
+      }
+
+      function drawLayer(layer) {
+        ctx.save();
+        ctx.fillStyle = layer.color.accent;
+        ctx.font = "700 11px 'Segoe UI', 'Microsoft YaHei', sans-serif";
+        ctx.fillText(layer.label, 25, layer.y + 16);
+        ctx.fillStyle = "#617b94";
+        ctx.font = "10px 'Segoe UI', 'Microsoft YaHei', sans-serif";
+        ctx.fillText(layer.sub, 25, layer.y + 34);
+        ctx.strokeStyle = "rgba(91, 123, 151, .2)";
+        ctx.setLineDash([3, 6]);
+        ctx.beginPath();
+        ctx.moveTo(145, layer.y + 20);
+        ctx.lineTo(1170, layer.y + 20);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      function drawLink(fromId, toId, index) {
+        const from = nodeById.get(fromId);
+        const to = nodeById.get(toId);
+        const startX = from.x + from.w / 2;
+        const startY = from.y + 38;
+        const endX = to.x + to.w / 2;
+        const endY = to.y;
+        const middleY = startY + (endY - startY) * 0.52;
+        const active = hoveredNode && (hoveredNode.id === fromId || hoveredNode.id === toId);
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.bezierCurveTo(startX, middleY, endX, middleY, endX, endY);
+        ctx.strokeStyle = active ? "rgba(117, 207, 255, .7)" : "rgba(92, 130, 165, .27)";
+        ctx.lineWidth = active ? 1.5 : 1;
+        ctx.stroke();
+
+        const progress = (elapsed * 0.00016 + index * 0.137) % 1;
+        const x = Math.pow(1 - progress, 3) * startX
+          + 3 * Math.pow(1 - progress, 2) * progress * startX
+          + 3 * (1 - progress) * progress * progress * endX
+          + Math.pow(progress, 3) * endX;
+        const y = Math.pow(1 - progress, 3) * startY
+          + 3 * Math.pow(1 - progress, 2) * progress * middleY
+          + 3 * (1 - progress) * progress * progress * middleY
+          + Math.pow(progress, 3) * endY;
+        ctx.beginPath();
+        ctx.fillStyle = active ? "#b5f2ff" : "#7bcaff";
+        ctx.shadowColor = "#7bcaff";
+        ctx.shadowBlur = active ? 10 : 6;
+        ctx.arc(x, y, active ? 3 : 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawNode(node) {
+        const palette = colors[node.group];
+        const active = hoveredNode?.id === node.id;
+        ctx.save();
+        roundRect(node.x, node.y, node.w, 48, 9);
+        ctx.fillStyle = active ? "#1a3851" : palette.fill;
+        ctx.fill();
+        ctx.strokeStyle = active ? "#9deaff" : palette.stroke;
+        ctx.lineWidth = active ? 1.5 : 1;
+        ctx.shadowColor = active ? "#65cfff" : "transparent";
+        ctx.shadowBlur = active ? 17 : 0;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = palette.accent;
+        ctx.font = "600 12px 'Segoe UI', 'Microsoft YaHei', sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(node.label, node.x + node.w / 2, node.y + 20);
+        ctx.fillStyle = "#a2b5c8";
+        ctx.font = "9px 'Segoe UI', 'Microsoft YaHei', sans-serif";
+        ctx.fillText(node.sub, node.x + node.w / 2, node.y + 36);
+        ctx.restore();
+      }
+
+      function render() {
+        animationId = 0;
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = "#0a1929";
+        ctx.fillRect(0, 0, width, height);
+        ctx.strokeStyle = "rgba(103, 140, 171, .055)";
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= width; x += 30) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+        for (let y = 0; y <= height; y += 30) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+        layers.forEach(drawLayer);
+        links.forEach((link, index) => drawLink(link[0], link[1], index));
+        nodes.forEach(drawNode);
+        elapsed += 16;
+        animationId = requestAnimationFrame(render);
+      }
+
+      canvas.addEventListener("pointermove", (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = width / rect.width;
+        const scaleY = height / rect.height;
+        const x = (event.clientX - rect.left) * scaleX;
+        const y = (event.clientY - rect.top) * scaleY;
+        const next = nodes.find(node => x >= node.x && x <= node.x + node.w && y >= node.y && y <= node.y + 48) || null;
+        if (next?.id !== hoveredNode?.id) {
+          hoveredNode = next;
+          if (next) {
+            title.textContent = next.label;
+            copy.textContent = next.info;
+          } else {
+            title.textContent = "交互提示";
+            copy.textContent = "将鼠标悬停在架构模块上，查看模块职责；流动光点表示典型请求与数据流向。";
+          }
+        }
+        canvas.style.cursor = next ? "pointer" : "default";
+      });
+
+      canvas.addEventListener("pointerleave", () => {
+        hoveredNode = null;
+        title.textContent = "交互提示";
+        copy.textContent = "将鼠标悬停在架构模块上，查看模块职责；流动光点表示典型请求与数据流向。";
+        canvas.style.cursor = "default";
+      });
+
+      render();
+      window.addEventListener("pagehide", () => cancelAnimationFrame(animationId), { once: true });
+    })();
+  </script>
+</body>
+</html>

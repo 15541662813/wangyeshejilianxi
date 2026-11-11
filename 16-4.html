@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ffffff">
+  <title>股票涨跌排行榜</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --border: #d9d9d9;
+      --grid: #e5e5e5;
+      --blue: #164c78;
+      --red: #c82127;
+      --text: #333;
+      --muted: #888;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #fff;
+      color: var(--text);
+      font-family: Arial, "Microsoft YaHei", "SimSun", sans-serif;
+    }
+
+    .page {
+      width: min(100% - 64px, 1020px);
+      margin: 30px auto;
+    }
+
+    .rank-table {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 0 2px rgb(0 0 0 / 8%);
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      min-height: 84px;
+      border-bottom: 1px solid var(--border);
+      background: #f7f7f7;
+    }
+
+    .tab {
+      position: relative;
+      display: grid;
+      min-width: 0;
+      place-items: center;
+      border: 0;
+      border-right: 1px solid var(--border);
+      background: #f7f7f7;
+      color: var(--blue);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: clamp(20px, 3vw, 30px);
+      font-weight: 400;
+      transition: background .16s ease, color .16s ease;
+    }
+
+    .tab:last-child { border-right: 0; }
+    .tab:hover { background: #f1f1f1; }
+    .tab[aria-selected="true"] { background: #fff; color: #222; font-weight: 700; }
+    .tab[aria-selected="true"]::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 2px; background: #fff; content: ""; }
+    .tab:focus-visible { z-index: 1; outline: 2px solid #347eae; outline-offset: -3px; }
+
+    .table-head, .stock-row {
+      display: grid;
+      grid-template-columns: 1.28fr 1fr 1fr 1fr;
+      align-items: center;
+    }
+
+    .table-head {
+      min-height: 0;
+      padding: 0 22px;
+      color: #777;
+      font-size: 13px;
+      visibility: hidden;
+    }
+
+    .stock-list { margin: 0; padding: 0; list-style: none; }
+
+    .stock-row {
+      min-height: 78px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--grid);
+      background: #fff;
+      font-size: clamp(16px, 2.45vw, 28px);
+    }
+
+    .stock-row:last-child { border-bottom: 0; }
+    .stock-row:hover { background: #fafafa; }
+    .stock-name { display: flex; min-width: 0; align-items: baseline; gap: 7px; white-space: nowrap; }
+    .rank { color: var(--red); }
+    .company { overflow: hidden; color: #303030; text-overflow: ellipsis; }
+    .value { color: #333; text-align: center; white-space: nowrap; }
+    .change, .percent { color: var(--red); text-align: center; white-space: nowrap; }
+
+    .footer-note {
+      margin: 12px 2px 0;
+      color: #999;
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    @media (max-width: 600px) {
+      .page { width: calc(100% - 28px); margin: 20px auto; }
+      .tabs { min-height: 64px; }
+      .stock-row { min-height: 64px; padding: 0 10px; grid-template-columns: 1.35fr .85fr 1fr 1fr; font-size: clamp(14px, 3.8vw, 20px); }
+      .stock-name { gap: 4px; }
+      .table-head { padding: 0 10px; }
+    }
+
+    @media (max-width: 370px) {
+      .page { width: calc(100% - 18px); margin-top: 16px; }
+      .tabs { min-height: 58px; }
+      .stock-row { min-height: 58px; padding: 0 7px; font-size: 13px; }
+      .stock-name { gap: 3px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="rank-table" aria-label="股票涨跌排行榜">
+      <div class="tabs" role="tablist" aria-label="选择排行榜">
+        <button class="tab" id="tab-sh-up" type="button" role="tab" aria-selected="true" aria-controls="stock-list" data-board="shUp">沪涨</button>
+        <button class="tab" id="tab-sh-down" type="button" role="tab" aria-selected="false" aria-controls="stock-list" data-board="shDown" tabindex="-1">沪跌</button>
+        <button class="tab" id="tab-sz-up" type="button" role="tab" aria-selected="false" aria-controls="stock-list" data-board="szUp" tabindex="-1">深涨</button>
+        <button class="tab" id="tab-sz-down" type="button" role="tab" aria-selected="false" aria-controls="stock-list" data-board="szDown" tabindex="-1">深跌</button>
+      </div>
+      <div class="table-head" aria-hidden="true">
+        <span>股票名称</span><span>最新价</span><span>涨跌额</span><span>涨跌幅</span>
+      </div>
+      <ol id="stock-list" class="stock-list" role="tabpanel" aria-labelledby="tab-sh-up"></ol>
+    </section>
+    <p class="footer-note">行情数据为页面演示内容，不构成投资建议。</p>
+  </main>
+
+  <script>
+    const boards = {
+      shUp: [
+        { name: "N新能", price: "8.88", change: "+3.35", percent: "60.58%" },
+        { name: "天津松江", price: "8.16", change: "+0.65", percent: "8.66%" },
+        { name: "金瑞科技", price: "8.79", change: "+0.42", percent: "5.02%" },
+        { name: "宏发股份", price: "17.22", change: "+0.82", percent: "5.00%" },
+        { name: "杭齿前进", price: "7.23", change: "+0.34", percent: "4.93%" }
+      ],
+      shDown: [
+        { name: "中信证券", price: "18.42", change: "-1.08", percent: "-5.54%" },
+        { name: "中国软件", price: "42.16", change: "-2.21", percent: "-4.98%" },
+        { name: "华远地产", price: "2.76", change: "-0.14", percent: "-4.83%" },
+        { name: "金地集团", price: "6.31", change: "-0.30", percent: "-4.54%" },
+        { name: "东方通信", price: "12.18", change: "-0.56", percent: "-4.40%" }
+      ],
+      szUp: [
+        { name: "天顺风能", price: "10.52", change: "+0.96", percent: "10.04%" },
+        { name: "兴源过滤", price: "16.02", change: "+1.46", percent: "10.03%" },
+        { name: "北京君正", price: "36.92", change: "+3.36", percent: "10.01%" },
+        { name: "美盛文化", price: "32.87", change: "+2.99", percent: "10.01%" },
+        { name: "骅威股份", price: "15.16", change: "+1.38", percent: "10.01%" }
+      ],
+      szDown: [
+        { name: "中弘股份", price: "1.18", change: "-0.13", percent: "-9.92%" },
+        { name: "乐视网", price: "4.72", change: "-0.52", percent: "-9.92%" },
+        { name: "神雾环保", price: "7.46", change: "-0.82", percent: "-9.91%" },
+        { name: "华谊嘉信", price: "5.19", change: "-0.57", percent: "-9.89%" },
+        { name: "天翔环境", price: "3.01", change: "-0.33", percent: "-9.88%" }
+      ]
+    };
+
+    const tabs = [...document.querySelectorAll(".tab")];
+    const stockList = document.querySelector("#stock-list");
+
+    function renderBoard(boardName, selectedTab) {
+      stockList.replaceChildren();
+      boards[boardName].forEach((stock, index) => {
+        const row = document.createElement("li");
+        row.className = "stock-row";
+
+        const name = document.createElement("span");
+        name.className = "stock-name";
+        const rank = document.createElement("span");
+        rank.className = "rank";
+        rank.textContent = `${index + 1}.`;
+        const company = document.createElement("span");
+        company.className = "company";
+        company.textContent = stock.name;
+        name.append(rank, company);
+
+        const price = document.createElement("span");
+        price.className = "value";
+        price.textContent = stock.price;
+        const change = document.createElement("span");
+        change.className = "change";
+        change.textContent = stock.change;
+        const percent = document.createElement("span");
+        percent.className = "percent";
+        percent.textContent = stock.percent;
+
+        row.append(name, price, change, percent);
+        stockList.append(row);
+      });
+
+      tabs.forEach((tab) => {
+        const active = tab === selectedTab;
+        tab.setAttribute("aria-selected", String(active));
+        tab.tabIndex = active ? 0 : -1;
+      });
+      stockList.setAttribute("aria-labelledby", selectedTab.id);
+    }
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener("click", () => renderBoard(tab.dataset.board, tab));
+      tab.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        let nextIndex = index;
+        if (event.key === "ArrowLeft") nextIndex = (index + tabs.length - 1) % tabs.length;
+        if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+        if (event.key === "Home") nextIndex = 0;
+        if (event.key === "End") nextIndex = tabs.length - 1;
+        tabs[nextIndex].focus();
+        renderBoard(tabs[nextIndex].dataset.board, tabs[nextIndex]);
+      });
+    });
+
+    renderBoard("shUp", tabs[0]);
+  </script>
+</body>
+</html>

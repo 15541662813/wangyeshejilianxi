@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#08121f">
+  <title>月球科研观测数据平台 · ECharts</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: #08121f;
+      color: #eaf3fc;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 74% 0%, rgb(33 82 113 / 21%), transparent 43rem),
+        #08121f;
+    }
+
+    .page { width: min(1440px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 34px; }
+    .topbar, .heading, .section-heading, .footer { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+    .topbar { color: #91a7bc; font-size: 11px; letter-spacing: .16em; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: #dceafa; font-weight: 700; }
+    .brand-mark { display: grid; width: 30px; aspect-ratio: 1; place-items: center; border: 1px solid #396484; border-radius: 9px; color: #63d5c1; }
+    .status { display: inline-flex; align-items: center; gap: 8px; }
+    .status::before { width: 7px; height: 7px; border-radius: 50%; background: #63d5c1; box-shadow: 0 0 12px #63d5c1; content: ""; }
+
+    .heading { align-items: flex-end; padding: 45px 0 27px; }
+    .eyebrow { margin: 0 0 10px; color: #63d5c1; font-size: 11px; font-weight: 700; letter-spacing: .22em; }
+    h1 { margin: 0; font-size: clamp(29px, 4vw, 43px); letter-spacing: -.04em; }
+    .intro { max-width: 420px; margin: 0 0 3px; color: #98adc2; font-size: 13px; line-height: 1.85; }
+
+    .charts {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
+      gap: 18px;
+    }
+
+    .panel {
+      min-width: 0;
+      overflow: hidden;
+      border: 1px solid #243b52;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgb(13 29 47 / 96%), rgb(8 19 33 / 98%));
+      box-shadow: 0 24px 70px rgb(0 0 0 / 18%);
+    }
+
+    .section-heading { min-height: 78px; padding: 17px 20px 14px; border-bottom: 1px solid rgb(48 72 94 / 55%); }
+    .section-heading h2 { margin: 0; font-size: 15px; font-weight: 650; }
+    .section-heading p { margin: 6px 0 0; color: #8199ae; font-size: 11px; }
+    .chart-tag {
+      flex: 0 0 auto;
+      padding: 6px 9px;
+      border: 1px solid #29485d;
+      border-radius: 99px;
+      color: #83bfc0;
+      font-size: 9px;
+      letter-spacing: .1em;
+    }
+
+    .chart { width: 100%; height: 405px; }
+    .panel-note { min-height: 42px; margin: 0; padding: 11px 20px; border-top: 1px solid rgb(48 72 94 / 48%); color: #7189a0; font-size: 10px; line-height: 1.6; }
+    .chart-error { display: none; margin: 0 20px 14px; color: #ffba97; font-size: 12px; line-height: 1.6; }
+
+    .research-note {
+      margin-top: 17px;
+      padding: 14px 17px;
+      border: 1px solid #20384f;
+      border-radius: 11px;
+      background: rgb(13 29 47 / 72%);
+      color: #9bb1c6;
+      font-size: 12px;
+      line-height: 1.75;
+    }
+
+    .research-note strong { margin-right: 8px; color: #e7f2fc; }
+    .footer { margin-top: 15px; color: #7189a0; font-size: 10px; line-height: 1.7; }
+    .rotate-button {
+      padding: 7px 11px;
+      border: 1px solid #31546c;
+      border-radius: 8px;
+      background: #10283a;
+      color: #cfe2f3;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .rotate-button:hover { border-color: #63d5c1; color: #fff; }
+    .rotate-button:focus-visible { outline: 2px solid #63d5c1; outline-offset: 3px; }
+
+    @media (max-width: 900px) {
+      .charts { grid-template-columns: 1fr; }
+      .chart { height: 380px; }
+    }
+
+    @media (max-width: 600px) {
+      .page { width: calc(100% - 28px); padding-top: 23px; }
+      .topbar { font-size: 9px; }
+      .heading { display: block; padding: 37px 0 21px; }
+      .intro { margin-top: 12px; }
+      .section-heading { min-height: 70px; padding: 14px; }
+      .chart { height: 340px; }
+      .panel-note { padding-right: 14px; padding-left: 14px; }
+      .footer { align-items: flex-start; flex-direction: column; gap: 5px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark">L</span><span>LUNAR RESEARCH · 17—4</span></div>
+      <span class="status">SCIENTIFIC VISUALIZATION</span>
+    </header>
+    <section class="heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">LUNAR EXPLORATION &amp; MODEL EVALUATION</p>
+        <h1 id="page-title">月球科研观测数据平台</h1>
+      </div>
+      <p class="intro">以交互式月球三维视图呈现探测站点与观测链路，并对比科研任务中不同识别模型的实验表现。</p>
+    </section>
+
+    <section class="charts" aria-label="月球科研观测和模型评估图表">
+      <article class="panel">
+        <header class="section-heading">
+          <div>
+            <h2>月面观测与探测链路</h2>
+            <p>三维月球 · 模拟观测站 · 探测轨迹</p>
+          </div>
+          <button class="rotate-button" id="rotate-toggle" type="button" aria-pressed="true">暂停旋转</button>
+        </header>
+        <div class="chart" id="moon-chart" role="img" aria-label="交互式三维月球探测站点及轨迹图"></div>
+        <p class="panel-note">月面坐标与链路为演示数据；拖动旋转，滚轮缩放，悬停查看站点信息。</p>
+        <p class="chart-error" id="moon-error" role="status"></p>
+      </article>
+
+      <article class="panel">
+        <header class="section-heading">
+          <div>
+            <h2>地形目标识别实验</h2>
+            <p>不同模型的识别准确率与单帧推理时延</p>
+          </div>
+          <span class="chart-tag">实验集 · N=2,400</span>
+        </header>
+        <div class="chart" id="metrics-chart" role="img" aria-label="月面地形目标识别准确率和推理时延对比图"></div>
+        <p class="panel-note">模拟实验结果：准确率越高越好，推理时延越低越好；用于展示多指标权衡。</p>
+      </article>
+    </section>
+
+    <aside class="research-note">
+      <strong>科研说明</strong>
+      图中月面坐标及模型评测数据均为演示数据，不代表真实探测任务或实验结论。正式研究应注明数据集版本、硬件环境、评测协议，并报告多次运行的统计结果。
+    </aside>
+    <footer class="footer">
+      <span>图表引擎：ECharts 5.6.0 · ECharts-GL 2.0.9</span>
+      <span>科研可视化示例 · 本地图表库位于 cdn/ 目录</span>
+    </footer>
+  </main>
+
+  <script src="cdn/echarts.min.js"></script>
+  <script src="cdn/echarts-gl.min.js"></script>
+  <script>
+    (() => {
+      const moonElement = document.querySelector("#moon-chart");
+      const metricsElement = document.querySelector("#metrics-chart");
+      const moonError = document.querySelector("#moon-error");
+      const rotateButton = document.querySelector("#rotate-toggle");
+      const charts = [];
+      let moonChart = null;
+      let autoRotate = true;
+
+      if (!window.echarts) {
+        const message = "图表库加载失败，请确认 cdn/echarts.min.js 文件存在。";
+        moonError.textContent = message;
+        moonError.style.display = "block";
+        throw new Error(message);
+      }
+
+      function createMoonTexture() {
+        const texture = document.createElement("canvas");
+        texture.width = 1024;
+        texture.height = 512;
+        const ctx = texture.getContext("2d");
+        const base = ctx.createLinearGradient(0, 0, 0, texture.height);
+        base.addColorStop(0, "#999894");
+        base.addColorStop(.48, "#777772");
+        base.addColorStop(1, "#a09f98");
+        ctx.fillStyle = base;
+        ctx.fillRect(0, 0, texture.width, texture.height);
+
+        let seed = 1734;
+        const random = () => {
+          seed = (seed * 1664525 + 1013904223) % 4294967296;
+          return seed / 4294967296;
+        };
+
+        ctx.globalAlpha = .15;
+        for (let index = 0; index < 55; index += 1) {
+          const x = random() * texture.width;
+          const y = random() * texture.height;
+          const rx = 22 + random() * 105;
+          const ry = rx * (.45 + random() * .28);
+          const mare = ctx.createRadialGradient(x, y, rx * .08, x, y, rx);
+          mare.addColorStop(0, "#444541");
+          mare.addColorStop(1, "#575751");
+          ctx.fillStyle = mare;
+          ctx.beginPath();
+          ctx.ellipse(x, y, rx, ry, random() * Math.PI, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.globalAlpha = 1;
+        for (let index = 0; index < 850; index += 1) {
+          const x = random() * texture.width;
+          const y = random() * texture.height;
+          const radius = 1.4 + random() * (index < 80 ? 15 : 5);
+          const light = random() > .5;
+          const crater = ctx.createRadialGradient(
+            x - radius * .22, y - radius * .28, radius * .08,
+            x, y, radius
+          );
+          crater.addColorStop(0, light ? "rgba(201, 199, 188, .35)" : "rgba(37, 38, 36, .34)");
+          crater.addColorStop(.72, light ? "rgba(127, 126, 119, .23)" : "rgba(55, 55, 52, .28)");
+          crater.addColorStop(1, "rgba(36, 37, 35, .02)");
+          ctx.fillStyle = crater;
+          ctx.beginPath();
+          ctx.arc(x, y, radius, 0, Math.PI * 2);
+          ctx.fill();
+          if (radius > 7) {
+            ctx.beginPath();
+            ctx.strokeStyle = "rgba(216, 214, 203, .15)";
+            ctx.lineWidth = Math.max(1, radius * .06);
+            ctx.arc(x, y, radius * .78, Math.PI * 1.08, Math.PI * 1.88);
+            ctx.stroke();
+          }
+        }
+        return texture;
+      }
+
+      function showMoonError(error) {
+        console.error("Moon globe chart failed to initialize:", error);
+        moonError.textContent = "三维月球图无法初始化。请在支持 WebGL 的现代浏览器中打开此页面。";
+        moonError.style.display = "block";
+      }
+
+      function initMoonChart() {
+        if (!window["echarts-gl"]) {
+          throw new Error("ECharts-GL plugin did not load");
+        }
+        const moonTexture = createMoonTexture();
+        moonChart = echarts.init(moonElement, null, { renderer: "canvas" });
+        charts.push(moonChart);
+        moonChart.setOption({
+          backgroundColor: "transparent",
+          tooltip: {
+            trigger: "item",
+            backgroundColor: "rgba(9, 22, 36, .96)",
+            borderColor: "#3d6078",
+            textStyle: { color: "#eaf3fc" },
+            formatter: (params) => {
+              const point = params.data;
+              if (point && point.name) return `${point.name}<br>月面坐标：${point.value[0]}°, ${point.value[1]}°`;
+              return params.seriesName;
+            }
+          },
+          globe: {
+            baseTexture: moonTexture,
+            shading: "lambert",
+            light: {
+              ambient: { intensity: .65, color: "#b9d1e8" },
+              main: { intensity: 1.25, color: "#fff1dc", alpha: 35, beta: 35 }
+            },
+            viewControl: {
+              autoRotate,
+              autoRotateSpeed: 3,
+              autoRotateAfterStill: 4,
+              distance: 155,
+              alpha: 20,
+              beta: 15,
+              minDistance: 105,
+              maxDistance: 245
+            },
+            postEffect: {
+              enable: true,
+              bloom: { enable: true, intensity: .12 }
+            }
+          },
+          series: [
+            {
+              type: "lines3D",
+              coordinateSystem: "globe",
+              name: "探测链路",
+              effect: { show: true, period: 4, trailWidth: 2, trailLength: .18, trailColor: "#82ebdc" },
+              lineStyle: { color: "#75cabc", width: 1.4, opacity: .48 },
+              data: [
+                { coords: [[-17.5, 14.2], [23.4, 8.6]] },
+                { coords: [[-17.5, 14.2], [-41.2, -18.3]] },
+                { coords: [[23.4, 8.6], [68.1, 21.7]] },
+                { coords: [[-41.2, -18.3], [68.1, 21.7]] },
+                { coords: [[23.4, 8.6], [8.6, 43.1]] }
+              ]
+            },
+            {
+              type: "scatter3D",
+              coordinateSystem: "globe",
+              name: "观测站",
+              symbol: "circle",
+              symbolSize: 9,
+              itemStyle: {
+                color: "#8ce5d2",
+                opacity: .96,
+                borderColor: "#f0fff9",
+                borderWidth: 1,
+                shadowBlur: 10,
+                shadowColor: "#56cfbb"
+              },
+              label: { show: false },
+              data: [
+                { name: "静海观测站", value: [-17.5, 14.2, 1] },
+                { name: "风暴洋着陆区", value: [23.4, 8.6, 1] },
+                { name: "南极科考点", value: [-41.2, -18.3, 1] },
+                { name: "高地成像站", value: [68.1, 21.7, 1] },
+                { name: "北部中继站", value: [8.6, 43.1, 1] }
+              ]
+            }
+          ]
+        });
+      }
+
+      function initMetricsChart() {
+        const chart = echarts.init(metricsElement, null, { renderer: "canvas" });
+        charts.push(chart);
+        chart.setOption({
+          backgroundColor: "transparent",
+          animationDuration: 700,
+          color: ["#6fd6c1", "#f0b976"],
+          legend: {
+            top: 16,
+            right: 20,
+            itemWidth: 9,
+            itemHeight: 9,
+            textStyle: { color: "#adbdce", fontSize: 10 }
+          },
+          grid: { top: 72, right: 58, bottom: 56, left: 58 },
+          tooltip: {
+            trigger: "axis",
+            backgroundColor: "rgba(9, 22, 36, .96)",
+            borderColor: "#3d6078",
+            textStyle: { color: "#eaf3fc" },
+            axisPointer: { type: "cross", crossStyle: { color: "#607c94" } }
+          },
+          xAxis: {
+            type: "category",
+            data: ["ResNet-50", "EfficientNet", "ViT-S", "Swin-T", "LunarNet"],
+            axisLabel: { color: "#9bb0c4", fontSize: 10, interval: 0, rotate: 18 },
+            axisLine: { lineStyle: { color: "#40566c" } },
+            axisTick: { show: false }
+          },
+          yAxis: [
+            {
+              type: "value",
+              name: "准确率 (%)",
+              min: 70,
+              max: 100,
+              nameTextStyle: { color: "#84bcae", fontSize: 10, padding: [0, 0, 0, 10] },
+              axisLabel: { color: "#91a7bc", fontSize: 10, formatter: "{value}%" },
+              axisLine: { show: false },
+              axisTick: { show: false },
+              splitLine: { lineStyle: { color: "rgba(93, 120, 146, .2)", type: "dashed" } }
+            },
+            {
+              type: "value",
+              name: "时延 (ms)",
+              min: 0,
+              max: 100,
+              nameTextStyle: { color: "#c5a77f", fontSize: 10, padding: [0, 10, 0, 0] },
+              axisLabel: { color: "#91a7bc", fontSize: 10, formatter: "{value}" },
+              axisLine: { show: false },
+              axisTick: { show: false },
+              splitLine: { show: false }
+            }
+          ],
+          series: [
+            {
+              name: "识别准确率",
+              type: "line",
+              smooth: .35,
+              symbol: "circle",
+              symbolSize: 8,
+              lineStyle: { width: 3 },
+              itemStyle: { borderColor: "#0c1b2b", borderWidth: 2 },
+              areaStyle: { opacity: .1 },
+              data: [86.4, 89.2, 91.8, 93.1, 95.6]
+            },
+            {
+              name: "单帧时延",
+              type: "bar",
+              yAxisIndex: 1,
+              barWidth: 14,
+              itemStyle: { borderRadius: [4, 4, 0, 0], opacity: .83 },
+              data: [28, 19, 34, 41, 16]
+            }
+          ]
+        });
+      }
+
+      try {
+        initMoonChart();
+      } catch (error) {
+        showMoonError(error);
+      }
+      initMetricsChart();
+
+      rotateButton.addEventListener("click", () => {
+        if (!moonChart) {
+          moonError.textContent = "当前环境无法显示三维月球图，旋转控制不可用。";
+          moonError.style.display = "block";
+          return;
+        }
+        autoRotate = !autoRotate;
+        moonChart.setOption({ globe: { viewControl: { autoRotate } } });
+        rotateButton.textContent = autoRotate ? "暂停旋转" : "继续旋转";
+        rotateButton.setAttribute("aria-pressed", String(autoRotate));
+      });
+
+      window.addEventListener("resize", () => {
+        charts.forEach(chart => chart.resize());
+      });
+      window.addEventListener("pagehide", () => {
+        charts.forEach(chart => chart.dispose());
+      }, { once: true });
+    })();
+  </script>
+</body>
+</html>

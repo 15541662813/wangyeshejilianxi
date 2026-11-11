@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>媒体查询布局</title>
+	<style>
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			min-width: 320px;
+			min-height: 100vh;
+			margin: 0;
+			padding: 32px 24px;
+			background: #f3f5f2;
+			color: #202b38;
+			font-family: "Microsoft YaHei", sans-serif;
+		}
+
+		main {
+			width: min(100%, 1040px);
+			margin: 0 auto;
+		}
+
+		h1 {
+			margin: 0 0 24px;
+			font-size: 28px;
+		}
+
+		.box-list {
+			display: grid;
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			gap: 16px;
+		}
+
+		.box {
+			aspect-ratio: 1;
+			display: grid;
+			place-items: center;
+			border-radius: 6px;
+			background: #216e5a;
+			color: #fff;
+			font-size: 24px;
+			font-weight: 700;
+		}
+
+		.box:nth-child(2) {
+			background: #a4472f;
+		}
+
+		.box:nth-child(3) {
+			background: #315f98;
+		}
+
+		.box:nth-child(4) {
+			background: #854e73;
+		}
+
+		.box:nth-child(5) {
+			background: #80621a;
+		}
+
+		.box:nth-child(6) {
+			background: #43733b;
+		}
+
+		.box:nth-child(7) {
+			background: #5b5099;
+		}
+
+		.box:nth-child(8) {
+			background: #267084;
+		}
+
+		@media (max-width: 900px) {
+			.box-list {
+				grid-template-columns: repeat(3, minmax(0, 1fr));
+			}
+		}
+
+		@media (max-width: 600px) {
+			body {
+				padding: 24px 16px;
+			}
+
+			.box-list {
+				grid-template-columns: repeat(2, minmax(0, 1fr));
+				gap: 12px;
+			}
+		}
+
+		@media (max-width: 400px) {
+			.box-list {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<h1>媒体查询布局</h1>
+		<section class="box-list" aria-label="八个盒子">
+			<div class="box">1</div>
+			<div class="box">2</div>
+			<div class="box">3</div>
+			<div class="box">4</div>
+			<div class="box">5</div>
+			<div class="box">6</div>
+			<div class="box">7</div>
+			<div class="box">8</div>
+		</section>
+	</main>
+</body>
+</html>

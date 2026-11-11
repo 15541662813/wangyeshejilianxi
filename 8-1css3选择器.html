@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    .main{
+        background-color: #ccc;
+        display: flex;
+        flex-wrap: wrap;
+        margin: 10px;
+    }
+    .box{
+        width: 150px;
+        height: 150px;
+        border: 1px solid #000;
+        margin: 10px;
+        background-color: #fff;
+        font-size: 14px;
+        display: flex;
+        /* 水平居中 */
+        justify-content: center;    
+        /* 垂直居中 */
+        align-items: center;
+        transition: all 0.6s;
+        box-sizing: border-box;
+        /* width包括padding和border */
+    }
+    .box:first-child:hover{
+        background-color: red;
+        font-size: 100px;
+    }
+    .box:nth-child(2):hover{
+        background-color: rgba(216, 106, 21, 0.74);
+        font-size: 100px;
+        box-shadow: inset 10px 10px 10px #000;
+    }
+    .box:nth-child(3):hover{
+        text-shadow: 100px 0px 10px #000;
+    }
+    .box:nth-of-type(4):hover{
+       border-radius: 50%;
+    }
+    .box:nth-of-type(5):hover{
+        /*线性渐变*/
+        background: linear-gradient(to right, rgb(231, 137, 137), rgb(131, 23, 181));
+
+    }
+    .box:nth-of-type(6):hover{
+        /*径向渐变*/
+        background: radial-gradient(circle, rgb(27, 1, 21), rgb(131, 23, 181));
+    }
+    .box.box:nth-of-type(7):hover{
+        transform:scale(0.5) ;
+    }
+    .box.box:nth-of-type(8):hover{
+        transform:translateX(100px);
+    }
+    .box.box:nth-of-type(9):hover{
+        transform:rotateZ(-100deg);
+    }
+    .box.box:nth-of-type(10):hover{
+        transform:skewX(-45deg);
+    }
+    .box.box:nth-last-child(2):hover::after{
+        content: "#";
+        color: rgb(74, 22, 158);
+    }
+    .box.box:nth-last-child(1):hover::after{
+      content: "王大军";
+      color: aqua;
+      font-size: 6px;
+      width: 40px;
+      height: 40px;
+      border-radius: 5px;
+      background-color: rgb(0, 0, 0);
+      color: rgb(255, 255, 255);
+      text-align: center;
+      line-height: 10px;
+    }
+    /*拓展鼠标在偶数上时有变化，变化效果自定义*/
+    .box.box:nth-child(even):hover{
+        background-color: rgb(0, 0, 0);
+        color: rgb(255, 255, 255);
+    }
+    .box:nth-child(even):hover{
+    background-color: rgb(0, 0, 0);
+    color: rgb(255, 255, 255);
+    transform: scale(1.1);  /* 放大1.1倍 */
+    border-radius: 12px;    /* 圆角 */
+    transition: 0.3s;       /* 过渡，动画顺滑 */
+}
+
+</style>
+<body>
+    <div class="main">
+        <div class="box">1</div>
+        <div class="box">2</div>
+        <div class="box">3</div>
+        <div class="box">4</div>
+        <div class="box">5</div>
+        <div class="box">6</div>
+        <div class="box">7</div>
+        <div class="box">8</div>
+        <div class="box">9</div>
+        <div class="box">10</div>
+        <div class="box">11</div>
+        <div class="box">12</div>
+
+    </div>
+</body>
+</html>

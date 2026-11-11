@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 学号：24001010306  姓名：王大军 -->
+    <title>得物商城 - 网页元素设计 (24001010306 王大军)</title>
+    <style>
+        /* ====================================================
+           1. 全局公共CSS (满足实验要求)
+           ==================================================== */
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        body { background-color: #f5f5f5; color: #333; padding-bottom: 60px; }
+
+        /* 公共图片容器复用样式（wdj前缀） */
+        .wdj-img-box {
+            width: 100%; aspect-ratio: 1 / 1; background-color: #f9f9f9;
+            display: flex; justify-content: center; align-items: center; overflow: hidden;
+        }
+        .wdj-img-box img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.3s ease; }
+
+        /* 头部搜索区 (语义化: header) */
+        .wdj-header { background-color: #fff; padding: 10px 15px; position: sticky; top: 0; z-index: 100; }
+        .wdj-search-bar { background-color: #f7f7f7; border-radius: 20px; display: flex; align-items: center; padding: 8px 15px; }
+        .wdj-search-icon { width: 18px; height: 18px; fill: #999; margin-right: 8px; }
+        .wdj-search-bar input { border: none; background: transparent; flex: 1; outline: none; font-size: 14px; color: #999; }
+        .wdj-search-btn { font-size: 14px; font-weight: bold; color: #333; margin-left: 10px; }
+
+        /* 顶部导航 Tab (语义化: nav) */
+        .wdj-nav-tabs { display: flex; background-color: #fff; padding: 12px 15px; justify-content: space-between; font-size: 15px; color: #666; border-bottom: 1px solid #eee; }
+        .wdj-tab-item.active { font-weight: bold; color: #000; position: relative; }
+        .wdj-tab-item.active::after { content: ''; position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background-color: #000; border-radius: 2px; }
+
+        /* 商品列表区 (语义化: main, article) - 使用Grid布局 */
+        .wdj-product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+
+        /* 商品卡片 (上图下文典型结构 - Flex布局) */
+        .wdj-card {
+            background-color: #fff; border-radius: 8px; overflow: hidden;
+            display: flex; flex-direction: column; text-decoration: none; color: inherit;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+        .wdj-card:hover .wdj-img-box img { transform: scale(1.05); }
+
+        /* 文本信息区 */
+        .wdj-info-box { padding: 8px 10px; display: flex; flex-direction: column; flex: 1; }
+        .wdj-tag-line {
+            font-size: 11px; color: #999; margin-bottom: 4px;
+            /* 单行文本溢出省略号 */
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .wdj-title {
+            font-size: 14px; font-weight: 500; line-height: 1.3; color: #333; margin-bottom: 8px;
+            /* 多行文本溢出省略号 */
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        /* 价格行 */
+        .wdj-price-row { margin-top: auto; display: flex; align-items: baseline; flex-wrap: wrap; }
+        .wdj-price { font-size: 16px; font-weight: bold; color: #000; }
+        .wdj-price::before { content: '¥'; font-size: 12px; margin-right: 1px; }
+        .wdj-price-original { font-size: 11px; color: #999; text-decoration: line-through; margin-left: 5px; }
+        .wdj-sales { font-size: 11px; color: #999; margin-left: auto; }
+
+        /* 底部导航栏 (语义化: footer) - Flex平分宽度 */
+        .wdj-bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 60px;
+            background-color: #fff; border-top: 1px solid #eee;
+            display: flex; justify-content: space-around; align-items: center; z-index: 100;
+        }
+        .wdj-nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: #999; text-decoration: none; flex: 1; }
+        .wdj-nav-item.active { color: #000; font-weight: bold; }
+        .wdj-nav-icon { width: 24px; height: 24px; margin-bottom: 3px; fill: #999; }
+        .wdj-nav-item.active .wdj-nav-icon { fill: #000; }
+        .wdj-nav-icon.special { fill: #00c8b6; }
+    </style>
+</head>
+<body>
+
+    <!-- 头部搜索区 -->
+    <header class="wdj-header">
+        <div class="wdj-search-bar">
+            <svg class="wdj-search-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path d="M448 768A320 320 0 1 0 448 128a320 320 0 0 0 0 640z m297.344-76.992l214.592 214.592-54.624 54.624-214.592-214.592a384 384 0 1 1 54.624-54.624z"></path>
+            </svg>
+            <input type="text" placeholder="adidas ae 1" disabled>
+            <span class="wdj-search-btn">搜索</span>
+        </div>
+    </header>
+
+    <!-- 顶部导航 Tab -->
+    <nav class="wdj-nav-tabs">
+        <div class="wdj-tab-item active">推荐</div>
+        <div class="wdj-tab-item">11.11</div>
+        <div class="wdj-tab-item">鞋类</div>
+        <div class="wdj-tab-item">男装</div>
+        <div class="wdj-tab-item">女装</div>
+        <div class="wdj-tab-item">潮玩</div>
+    </nav>
+
+    <!-- 商品列表区 -->
+    <main class="wdj-product-grid">
+        
+        <!-- 商品 1 -->
+        <article class="wdj-card">
+            <a href="#detail-1" style="text-decoration: none; color: inherit; display: contents;">
+                <div class="wdj-img-box">
+                    <img src="./img/s1.jpg" alt="安踏 KAI SPEED 2 欧文">
+                </div>
+                <div class="wdj-info-box">
+                    <p class="wdj-tag-line">315万人关注该品牌 | AR试穿</p>
+                    <h3 class="wdj-title">安踏 KAI SPEED 2 欧文</h3>
+                    <div class="wdj-price-row">
+                        <span class="wdj-price">283</span>
+                        <span class="wdj-price-original">¥749</span>
+                        <span class="wdj-sales">1.3万+人付款</span>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+        <!-- 商品 2 -->
+        <article class="wdj-card">
+            <a href="#detail-2" style="text-decoration: none; color: inherit; display: contents;">
+                <div class="wdj-img-box">
+                    <img src="./img/s2.jpg" alt="adidas A.E. 1 Low Grey">
+                </div>
+                <div class="wdj-info-box">
+                    <p class="wdj-tag-line">爱德华兹同款</p>
+                    <h3 class="wdj-title">adidas A.E. 1 Low Grey</h3>
+                    <div class="wdj-price-row">
+                        <span class="wdj-price">312</span>
+                        <span class="wdj-price-original">¥809</span>
+                        <span class="wdj-sales">8000+人付款</span>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+        <!-- 商品 3 -->
+        <article class="wdj-card">
+            <a href="#detail-3" style="text-decoration: none; color: inherit; display: contents;">
+                <div class="wdj-img-box">
+                    <img src="./img/s3.jpg" alt="安踏 天际3 晚霞">
+                </div>
+                <div class="wdj-info-box">
+                    <p class="wdj-tag-line">AR试穿 | 刘浩存代言</p>
+                    <h3 class="wdj-title">安踏 天际3 晚霞 A SHOC</h3>
+                    <div class="wdj-price-row">
+                        <span class="wdj-price">181</span>
+                        <span class="wdj-price-original">¥599</span>
+                        <span class="wdj-sales">6000+人付款</span>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+        <!-- 商品 4 -->
+        <article class="wdj-card">
+            <a href="#detail-4" style="text-decoration: none; color: inherit; display: contents;">
+                <div class="wdj-img-box">
+                    <img src="./img/s4.jpg" alt="李宁 轻速3">
+                </div>
+                <div class="wdj-info-box">
+                    <p class="wdj-tag-line">569万人关注该品牌</p>
+                    <h3 class="wdj-title">李宁 轻速3mid 䨻科技 包</h3>
+                    <div class="wdj-price-row">
+                        <span class="wdj-price">236</span>
+                        <span class="wdj-price-original">¥599</span>
+                        <span class="wdj-sales">2万+人付款</span>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+        <!-- 商品 5 -->
+        <article class="wdj-card">
+            <a href="#detail-5" style="text-decoration: none; color: inherit; display: contents;">
+                <div class="wdj-img-box">
+                    <img src="./img/s5.jpg" alt="Nike Ja 4 莫兰特四代">
+                </div>
+                <div class="wdj-info-box">
+                    <p class="wdj-tag-line">品牌内篮球鞋热销Top10</p>
+                    <h3 class="wdj-title">Nike Ja 4 莫兰特四代 EP</h3>
+                    <div class="wdj-price-row">
+                        <span class="wdj-price">618</span>
+                        <span class="wdj-price-original">¥899</span>
+                        <span class="wdj-sales">6000+人付款</span>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+        <!-- 商品 6 -->
+        <article class="wdj-card">
+            <a href="#detail-6" style="text-decoration: none; color: inherit; display: contents;">
+                <div class="wdj-img-box">
+                    <img src="./img/s6.jpg" alt="安踏 天际1">
+                </div>
+                <div class="wdj-info-box">
+                    <p class="wdj-tag-line">11.11 AR试穿</p>
+                    <h3 class="wdj-title">安踏 天际1 天际线 氮科</h3>
+                    <div class="wdj-price-row">
+                        <span class="wdj-price">243</span>
+                        <span class="wdj-price-original">¥699</span>
+                        <span class="wdj-sales">1.3万+人付款</span>
+                    </div>
+                </div>
+            </a>
+        </article>
+
+    </main>
+
+    <!-- 底部导航栏 -->
+    <footer class="wdj-bottom-nav">
+        <a href="#" class="wdj-nav-item active">
+            <svg class="wdj-nav-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path d="M946.5 505L560.1 118.8l-25.9-25.9a31.5 31.5 0 0 0-44.4 0L77.5 505a63.9 63.9 0 0 0-18.8 46c.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8a63.6 63.6 0 0 0 18.7-45.3c0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204z m199.2-325.7V868H632V640c0-22.1-17.9-40-40-40H432c-22.1 0-40 17.9-40 40v228H256V542.3h-50.6l307.4-307.4 307.4 307.4h-53z"></path>
+            </svg>
+            <span>得物</span>
+        </a>
+        <a href="#" class="wdj-nav-item">
+            <svg class="wdj-nav-icon special" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path d="M886.7 373.9H137.3c-20.5 0-37.1 16.6-37.1 37.1v41.7c0 20.5 16.6 37.1 37.1 37.1h749.4c20.5 0 37.1-16.6 37.1-37.1v-41.7c0-20.5-16.6-37.1-37.1-37.1zM195.5 558h633v264.9c0 20.5-16.6 37.1-37.1 37.1H232.6c-20.5 0-37.1-16.6-37.1-37.1V558z m393.8-288.3c1.9 18.5 8.9 36.9 21.2 52.9l12.4 16.1h-189l12.4-16.1c12.3-16 19.3-34.4 21.2-52.9l24.4-116.8c3.6-17.2 20.5-28.2 37.7-24.5l105 22.1c17.2 3.6 28.3 20.6 24.7 37.8l-24.4 116.8-45.6-9.6z"></path>
+            </svg>
+            <span>购买</span>
+        </a>
+        <a href="#" class="wdj-nav-item">
+            <svg class="wdj-nav-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path d="M512 85.333333c-235.648 0-426.666667 191.018667-426.666667 426.666667s191.018667 426.666667 426.666667 426.666667 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333z m127.018667 553.685334l-313.6 134.4 134.4-313.6 313.6-134.4-134.4 313.6z"></path>
+                <path d="M512 469.333333m-42.666667 0a42.666667 42.666667 0 1 0 85.333334 0 42.666667 42.666667 0 1 0-85.333334 0Z"></path>
+            </svg>
+            <span>探索</span>
+        </a>
+        <a href="#" class="wdj-nav-item">
+            <svg class="wdj-nav-icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                <path d="M512 512c117.82 0 213.333-95.513 213.333-213.333S629.82 85.333 512 85.333 298.667 180.847 298.667 298.667 394.18 512 512 512z m0 85.333c-165.12 0-298.667 85.333-298.667 189.867v38.4h597.334v-38.4c0-104.534-133.547-189.867-298.667-189.867z"></path>
+            </svg>
+            <span>我</span>
+        </a>
+    </footer>
+
+</body>
+</html>

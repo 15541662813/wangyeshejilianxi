@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>左图右文</title>
+    <style>
+        .ytext h3{
+            line-height: 40px;
+            color:#333;
+        }
+        .author{
+            flex-grow:1;
+            padding-left:3px;
+        }
+        .time{
+            margin-right:20px;
+        }
+        /* 给zitem开启flex，实现左图右文 */
+        .zitem{
+            display: flex;
+            align-items: center;
+            gap:10px;
+            margin:10px 0;
+        }
+        .zitem img{
+            width:120px;
+            height:80px;
+            object-fit:cover;
+        }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="zitem">
+            <img src="./img/111.jpg" >
+            <div class="ytext">
+                <h3>标题</h3>
+                <span class="author">王大军</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </div>
+
+        <div class="zitem">
+            <img src="./img/222.jpg" >
+            <div class="ytext">
+                <h3>标题</h3>
+                <span class="author">王大军</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </div>
+
+        <div class="zitem">
+            <img src="./img/333.jpg" >
+            <div class="ytext">
+                <h3>标题</h3>
+                <span class="author">王大军</span>
+                <span class="time">2026-09-21</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

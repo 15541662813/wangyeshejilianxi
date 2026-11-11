@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>布局草图</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .layer {
+            display: flex;
+            gap: 32px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        /* 外层大容器，每个画板 */
+        .frame {
+            width: 420px;
+            height: 420px;
+            border: 1px solid #999;
+            background-color: #fcfcfc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 灰色卡片 */
+        .card {
+            background-color: #e2e2e2;
+            border: 1px solid #222;
+        }
+
+        /* 布局1：单个方块 */
+        .layout1 .card {
+            width: 120px;
+            height: 120px;
+        }
+
+        /* 布局2：上下两个 */
+        .layout2 {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .layout2 .card {
+            width: 160px;
+            height: 100px;
+        }
+
+        /* 布局3：2行2列四格 */
+        .layout3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .layout3 .card {
+            width: 160px;
+            height: 100px;
+        }
+
+        /* 布局4：上面通栏，下面两个 */
+        .layout4 {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .layout4 .top-card {
+            width: 336px;
+            height: 100px;
+        }
+
+        .layout4 .bottom-wrap {
+            display: flex;
+            gap: 16px;
+        }
+
+        .layout4 .bottom-card {
+            width: 160px;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 第一层：第一个画板单独居中 -->
+    <div class="layer">
+        <div class="frame layout1">
+            <div class="card"></div>
+        </div>
+    </div>
+
+    <!-- 第二层：剩下三个并排 -->
+    <div class="layer">
+        <div class="frame layout2">
+            <div class="card"></div>
+            <div class="card"></div>
+        </div>
+
+        <div class="frame layout3">
+            <div class="card"></div>
+            <div class="card"></div>
+            <div class="card"></div>
+            <div class="card"></div>
+        </div>
+
+        <div class="frame layout4">
+            <div class="card top-card"></div>
+            <div class="bottom-wrap">
+                <div class="card bottom-card"></div>
+                <div class="card bottom-card"></div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

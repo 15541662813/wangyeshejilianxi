@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f6f1">
+  <title>JavaScript 对象图鉴</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #20231f;
+      --muted: #777b70;
+      --paper: #f7f6f1;
+      --line: #e7e5dc;
+      --green: #2f684b;
+      --green-light: #e5efe5;
+      --orange: #e98755;
+      --shadow: 0 16px 40px rgb(46 51 39 / 7%);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 87% 2%, rgb(242 200 102 / 18%), transparent 25rem),
+        var(--paper);
+      color: var(--ink);
+      font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .page { width: min(1120px, calc(100% - 40px)); margin: 0 auto; padding: 28px 0 64px; }
+    .topbar, .brand, .hero, .section-heading, .panel-heading, .profile-heading, .output-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar { color: var(--muted); font-size: 13px; }
+    .brand { justify-content: flex-start; gap: 9px; color: var(--ink); font-weight: 750; }
+    .brand-mark { font-size: 21px; }
+    .top-note { padding: 7px 12px; border: 1px solid var(--line); border-radius: 99px; }
+    .hero { align-items: flex-end; gap: 36px; padding: 66px 0 38px; }
+    .eyebrow { margin: 0 0 14px; color: var(--green); font-size: 12px; font-weight: 800; letter-spacing: .16em; }
+    h1 { max-width: 650px; margin: 0; font-size: clamp(40px, 6vw, 68px); letter-spacing: -.055em; line-height: 1.08; }
+    h1 span { color: var(--green); }
+    .hero-copy { max-width: 340px; margin: 0 0 5px; color: var(--muted); line-height: 1.85; }
+
+    .workbench {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(310px, .82fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+    .object-panel { min-width: 0; padding: 27px 30px 28px; }
+    .output-panel { display: flex; flex-direction: column; padding: 27px 28px; background: #f0f3eb; }
+    .panel-label { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+    .profile-heading { margin-bottom: 15px; }
+    .object-badge { color: var(--green); font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
+
+    .profile-card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 17px;
+      border: 1px solid #eeece4;
+      border-radius: 17px;
+      background: linear-gradient(120deg, #fcfbf7, #f8f6ee);
+    }
+    .avatar { display: grid; width: 66px; height: 66px; flex: 0 0 auto; place-items: center; border-radius: 20px; background: #f5e5d7; font-size: 37px; }
+    .profile-name { margin: 0 0 5px; font-size: 20px; }
+    .profile-role { margin: 0; color: var(--muted); font-size: 13px; }
+    .online-dot { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border-radius: 50%; background: #5e9d69; }
+    .offline .online-dot { background: #b7b7ad; }
+    .property-caption { margin: 21px 0 10px; color: var(--muted); font-size: 11px; font-weight: 750; letter-spacing: .08em; }
+    .properties { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+    .property {
+      min-width: 0;
+      padding: 11px 12px;
+      border: 1px solid #eeece4;
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color .15s ease, transform .15s ease;
+    }
+    .property:hover { transform: translateY(-2px); border-color: #a9c2aa; }
+    .property:focus-visible, .action-button:focus-visible, .method-card:focus-visible { outline: 3px solid #a6c8a9; outline-offset: 3px; }
+    .property-key { display: block; margin-bottom: 5px; color: var(--green); font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .property-value { display: block; overflow: hidden; color: #42463e; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+    .property-value.nested { color: #7765a0; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 16px; }
+    .action-button {
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .action-button:hover { transform: translateY(-2px); border-color: #9eb7a2; background: #f4f8f2; }
+    .action-button .verb { color: var(--green); font-weight: 800; }
+    .add-property { display: flex; gap: 7px; width: 100%; margin-top: 9px; }
+    .add-property input { min-width: 0; flex: 1; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; outline: none; }
+    .add-property input:focus { border-color: #8eaf91; box-shadow: 0 0 0 3px #e5efe5; }
+    .add-property button { padding: 9px 13px; border: 0; border-radius: 10px; background: var(--green); color: #fff; cursor: pointer; }
+    .add-property button:hover { background: #25553c; }
+    .small-hint { margin: 12px 0 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
+
+    .output-heading { margin-bottom: 17px; }
+    .output-status { color: var(--green); font-size: 12px; font-weight: 750; }
+    .code-box { min-height: 156px; padding: 16px; border: 1px solid #e4e9dc; border-radius: 13px; background: rgb(255 255 255 / 68%); }
+    .code { margin: 0; color: #35463a; font: 12px/1.8 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .explanation { margin: 14px 0 0; color: #626b60; font-size: 13px; line-height: 1.7; }
+    .output-note { margin: auto 0 0; padding-top: 20px; color: #768070; font-size: 11px; line-height: 1.6; }
+
+    .methods { padding-top: 53px; }
+    .section-heading { align-items: flex-end; margin-bottom: 18px; }
+    .section-heading h2 { margin: 0; font-size: 25px; letter-spacing: -.03em; }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+    .method-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+    .method-card {
+      min-height: 151px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+    }
+    .method-card:hover { transform: translateY(-3px); border-color: #c4d2c1; box-shadow: 0 10px 24px rgb(46 51 39 / 6%); }
+    .method-card.active { border-color: #8eaf91; box-shadow: inset 0 0 0 1px #8eaf91; }
+    .method-type { display: inline-block; margin-bottom: 12px; padding: 4px 8px; border-radius: 99px; background: #e9f1e7; color: #376b48; font-size: 10px; font-weight: 800; }
+    .method-card strong { display: block; margin-bottom: 6px; font: 700 15px ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .method-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .takeaway { margin-top: 36px; padding: 19px 22px; border: 1px solid var(--line); border-radius: 15px; background: #fbfaf6; color: #626b60; font-size: 13px; line-height: 1.8; }
+    .takeaway strong { color: var(--ink); }
+    footer { padding-top: 30px; color: #92948c; font-size: 11px; text-align: center; }
+
+    @media (max-width: 760px) {
+      .hero { display: block; padding: 52px 0 28px; }
+      .hero-copy { margin-top: 18px; }
+      .workbench { grid-template-columns: 1fr; }
+      .output-panel { min-height: 290px; }
+      .method-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 480px) {
+      .page { width: min(100% - 28px, 1120px); padding-top: 19px; }
+      .top-note { font-size: 11px; }
+      .object-panel, .output-panel { padding: 21px 18px; }
+      .properties { gap: 7px; }
+      .property { padding: 10px; }
+      .section-heading { display: block; }
+      .section-heading p { margin-top: 8px; }
+      .method-grid { gap: 9px; }
+      .method-card { min-height: 153px; padding: 13px 11px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <nav class="topbar" aria-label="页面导航">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">🧭</span> 前端小厨房</div>
+      <span class="top-note">JavaScript · 入门图鉴</span>
+    </nav>
+
+    <header class="hero">
+      <div>
+        <p class="eyebrow">JAVASCRIPT OBJECT / 02</p>
+        <h1>对象像一张<br><span>探险家档案。</span></h1>
+      </div>
+      <p class="hero-copy">名字、等级、背包和技能，都可以收进同一个对象里。点一点档案属性，认识 JavaScript 对象的结构和常见操作。</p>
+    </header>
+
+    <section class="workbench" aria-label="JavaScript 对象互动演示">
+      <div class="object-panel">
+        <div class="profile-heading">
+          <span class="panel-label">🪪 探险家对象</span>
+          <span class="object-badge">typeof explorer → "object"</span>
+        </div>
+        <div id="profile-card" class="profile-card">
+          <div class="avatar" aria-hidden="true">🧑‍🚀</div>
+          <div>
+            <h2 id="profile-name" class="profile-name">小满</h2>
+            <p id="profile-role" class="profile-role"><span class="online-dot"></span><span id="role-text">森林探险家 · 等级 3</span></p>
+          </div>
+        </div>
+        <p class="property-caption">属性名（key） + 属性值（value） · 点击属性查看访问方式</p>
+        <div id="properties" class="properties" aria-label="对象属性"></div>
+        <div class="actions" aria-label="对象快捷操作">
+          <button class="action-button" data-action="modify"><span class="verb">修改</span> 名字</button>
+          <button class="action-button" data-action="add"><span class="verb">添加</span> 星星</button>
+          <button class="action-button" data-action="delete"><span class="verb">delete</span> 星星</button>
+          <button class="action-button" data-action="toggle"><span class="verb">切换</span> 在线状态</button>
+          <button class="action-button" data-action="reset">↺ 重置对象</button>
+        </div>
+        <form id="add-form" class="add-property">
+          <input id="property-input" type="text" maxlength="24" placeholder="试着输入新属性名，例如 favorite" aria-label="新属性名">
+          <button type="submit">添加属性</button>
+        </form>
+        <p class="small-hint">对象属性可用点号或方括号访问。想试试新增属性？输入英文属性名，按回车或点按钮。</p>
+      </div>
+
+      <aside class="output-panel" aria-live="polite">
+        <div class="output-heading">
+          <span class="panel-label">🔎 对象观察窗</span>
+          <span id="output-status" class="output-status">对象字面量</span>
+        </div>
+        <div class="code-box"><pre id="code" class="code"></pre></div>
+        <p id="explanation" class="explanation">对象用花括号包住一组「键值对」。属性描述它有什么，方法描述它能做什么。</p>
+        <p class="output-note">对象是引用类型：把对象赋值给另一个变量，通常复制的是引用，不是另一份独立对象。对象展开 {...obj} 是浅拷贝。</p>
+      </aside>
+    </section>
+
+    <section class="methods" aria-labelledby="methods-heading">
+      <div class="section-heading">
+        <h2 id="methods-heading">对象常见操作，一眼看懂</h2>
+        <p>点击卡片，在观察窗看代码和结果</p>
+      </div>
+      <div class="method-grid">
+        <button class="method-card" data-method="literal">
+          <span class="method-type">创建对象</span>
+          <strong>{ key: value }</strong>
+          <p>用对象字面量，把相关信息收进一个档案。</p>
+        </button>
+        <button class="method-card" data-method="access">
+          <span class="method-type">读取属性</span>
+          <strong>obj.key / obj[key]</strong>
+          <p>点号适合固定属性名；方括号可使用变量或特殊字符。</p>
+        </button>
+        <button class="method-card" data-method="keys">
+          <span class="method-type">对象工具</span>
+          <strong>Object.keys()</strong>
+          <p>把对象自己的可枚举属性名收集成数组。</p>
+        </button>
+        <button class="method-card" data-method="values">
+          <span class="method-type">对象工具</span>
+          <strong>Object.values()</strong>
+          <p>取出对象自己的可枚举属性值，得到一个数组。</p>
+        </button>
+        <button class="method-card" data-method="entries">
+          <span class="method-type">对象工具</span>
+          <strong>Object.entries()</strong>
+          <p>把属性名和值配成 [key, value]，方便遍历。</p>
+        </button>
+        <button class="method-card" data-method="destructure">
+          <span class="method-type">提取属性</span>
+          <strong>解构赋值</strong>
+          <p>从对象中方便地取出属性，直接存进变量。</p>
+        </button>
+        <button class="method-card" data-method="spread">
+          <span class="method-type">复制与合并</span>
+          <strong>{ ...obj }</strong>
+          <p>展开对象属性，创建浅拷贝，也能合并对象。</p>
+        </button>
+        <button class="method-card" data-method="has">
+          <span class="method-type">属性判断</span>
+          <strong>Object.hasOwn()</strong>
+          <p>检查对象是否直接拥有某个属性，不查原型链。</p>
+        </button>
+        <button class="method-card" data-method="method">
+          <span class="method-type">对象方法</span>
+          <strong>this</strong>
+          <p>方法里的 this 通常指向调用它的对象。</p>
+        </button>
+        <button class="method-card" data-method="optional">
+          <span class="method-type">安全访问</span>
+          <strong>?. 可选链</strong>
+          <p>访问可能不存在的嵌套属性，避免读到 undefined 时出错。</p>
+        </button>
+        <button class="method-card" data-method="assign">
+          <span class="method-type">复制与合并</span>
+          <strong>Object.assign()</strong>
+          <p>把来源对象的属性复制到目标对象，目标对象会被修改。</p>
+        </button>
+        <button class="method-card" data-method="delete">
+          <span class="method-type">修改对象</span>
+          <strong>delete</strong>
+          <p>删除对象自身的某个属性；属性不存在时不会报错。</p>
+        </button>
+      </div>
+    </section>
+
+    <div class="takeaway"><strong>记忆小口诀：</strong>对象是「名片夹」——用 key 找到 value；点号读固定名字，方括号读动态名字；对象方法里常用 <code>this</code> 访问自己的属性。</div>
+    <footer>属性存信息，方法做事情。把相关数据放在一起，就是对象的用处。</footer>
+  </main>
+
+  <script>
+    function createExplorer() {
+      return {
+        name: "小满",
+        role: "森林探险家",
+        level: 3,
+        online: true,
+        backpack: { item: "指南针", count: 1 },
+        greet() {
+          return `你好，我是${this.name}！`;
+        }
+      };
+    }
+
+    let explorer = createExplorer();
+    const propertiesElement = document.querySelector("#properties");
+    const profileCard = document.querySelector("#profile-card");
+    const profileName = document.querySelector("#profile-name");
+    const roleText = document.querySelector("#role-text");
+    const codeElement = document.querySelector("#code");
+    const explanationElement = document.querySelector("#explanation");
+    const outputStatus = document.querySelector("#output-status");
+    const methodButtons = document.querySelectorAll("[data-method]");
+    const actionButtons = document.querySelectorAll("[data-action]");
+    const objectMethods = ["greet"];
+
+    function formatValue(value) {
+      if (typeof value === "string") return `"${value}"`;
+      if (typeof value === "function") return "ƒ()";
+      if (value && typeof value === "object") return "{…}";
+      return String(value);
+    }
+
+    function renderExplorer() {
+      profileName.textContent = explorer.name;
+      roleText.textContent = `${explorer.role} · 等级 ${explorer.level}`;
+      profileCard.classList.toggle("offline", !explorer.online);
+      propertiesElement.replaceChildren();
+
+      Object.keys(explorer).forEach((key) => {
+        const button = document.createElement("button");
+        button.className = "property";
+        button.type = "button";
+        button.setAttribute("aria-label", `查看属性 ${key}`);
+        const keyElement = document.createElement("span");
+        keyElement.className = "property-key";
+        keyElement.textContent = key;
+        const valueElement = document.createElement("span");
+        valueElement.className = "property-value";
+        if (explorer[key] && typeof explorer[key] === "object") valueElement.classList.add("nested");
+        valueElement.textContent = formatValue(explorer[key]);
+        button.append(keyElement, valueElement);
+        button.addEventListener("click", () => showProperty(key));
+        propertiesElement.append(button);
+      });
+
+      document.querySelector('[data-action="delete"]').disabled = !Object.hasOwn(explorer, "star");
+    }
+
+    function showOutput(method, code, explanation, status) {
+      codeElement.textContent = code;
+      explanationElement.textContent = explanation;
+      outputStatus.textContent = status;
+      methodButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.method === method);
+      });
+      renderExplorer();
+    }
+
+    function showProperty(key) {
+      const code = `explorer.${key}`;
+      const value = explorer[key];
+      showOutput("", `// 點擊了「${key}」屬性\n${code}\n// ${key}：${formatValue(value)}`, `點號可以讀取名稱已知的屬性。也可以寫 explorer["${key}"]，用字串放在方括號中讀取。`, "讀取屬性");
+    }
+
+    function runMethod(method) {
+      switch (method) {
+        case "literal":
+          showOutput(method, 'const explorer = {\n  name: "小滿",\n  level: 3,\n  backpack: { item: "指南針" },\n  greet() { return `你好，我是${this.name}！`; }\n};', "花括號裡的 name、level、backpack 是屬性；greet 是方法（值為函數的屬性）。屬性名和值用冒號連接，键值对之间用逗号分隔。", "对象字面量");
+          break;
+        case "access":
+          showOutput(method, `explorer.name\n// "${explorer.name}"\n\nconst key = "level";\nexplorer[key]\n// ${explorer.level}`, "点号后直接写属性名；方括号里可以放变量。若属性名含空格或连字符，也要使用方括号。", "读取属性");
+          break;
+        case "keys":
+          showOutput(method, `Object.keys(explorer)\n// [${Object.keys(explorer).map((key) => `"${key}"`).join(", ")}]`, "Object.keys 返回对象自身可枚举属性名组成的数组；方法 greet 也是对象的一个属性。", "对象工具");
+          break;
+        case "values":
+          showOutput(method, `Object.values(explorer)\n// [${Object.values(explorer).map(formatValue).join(", ")}]`, "Object.values 返回与属性名对应的属性值数组。对象中的嵌套对象仍然是一个对象值。", "对象工具");
+          break;
+        case "entries":
+          showOutput(method, `Object.entries(explorer)\n// [\n${Object.entries(explorer).map(([key, value]) => `//   ["${key}", ${formatValue(value)}]`).join(",\n")}\n// ]`, "Object.entries 把每个自有可枚举属性转成 [属性名, 属性值]。常配合 for...of 遍历。", "对象工具");
+          break;
+        case "destructure":
+          showOutput(method, `const { name, level } = explorer;\n// name：${formatValue(explorer.name)}，level：${explorer.level}`, "解构赋值从对象里取出指定属性，变量名默认与属性名相同。需要改变量名时可以写 { name: explorerName }。", "提取属性");
+          break;
+        case "spread": {
+          const copy = { ...explorer };
+          showOutput(method, `const copy = { ...explorer };\ncopy !== explorer       // ${copy !== explorer}\ncopy.backpack === explorer.backpack // ${copy.backpack === explorer.backpack}`, "展开语法创建了一个新对象，但这是浅拷贝：第一层属性复制了，backpack 这样的嵌套对象仍共享引用。", "浅拷贝");
+          break;
+        }
+        case "has":
+          showOutput(method, `Object.hasOwn(explorer, "name")\n// ${Object.hasOwn(explorer, "name")}\n\nObject.hasOwn(explorer, "toString")\n// ${Object.hasOwn(explorer, "toString")}`, "hasOwn 检查对象自己是否有这个属性，不会把原型链上的属性算进去。", "属性判断");
+          break;
+        case "method":
+          showOutput(method, `explorer.greet()\n// "${explorer.greet()}"`, "greet 作为 explorer 的方法被调用时，this 指向 explorer，因此 this.name 能读到当前名字。箭头函数没有自己的 this。", "调用方法");
+          break;
+        case "optional": {
+          const item = explorer.backpack?.item;
+          const missing = explorer.pet?.name;
+          showOutput(method, `explorer.backpack?.item\n// ${formatValue(item)}\n\nexplorer.pet?.name\n// ${String(missing)}`, "可选链在左侧是 null 或 undefined 时停止访问并返回 undefined；它适合安全读取不确定存在的嵌套属性。", "安全访问");
+          break;
+        }
+        case "assign": {
+          const merged = Object.assign({}, explorer, { level: explorer.level + 1 });
+          showOutput(method, `const upgraded = Object.assign({}, explorer, { level: ${explorer.level + 1} });\n// upgraded.level：${merged.level}\n// explorer.level：${explorer.level}`, "Object.assign 把来源对象的属性复制到目标对象。这里目标是空对象，所以得到合并后的新对象；若目标是 explorer，原对象会被修改。", "复制与合并");
+          break;
+        }
+        case "delete":
+          showOutput(method, 'delete explorer.star;\n// 是否还拥有 star？\nObject.hasOwn(explorer, "star")\n// ' + Object.hasOwn(explorer, "star"), "delete 删除指定的自有属性。如果目标是不存在的属性，不会抛错；不建议用 delete 删除数组元素。", "删除属性");
+          break;
+        default:
+          break;
+      }
+    }
+
+    function runAction(action) {
+      if (action === "modify") {
+        const previous = explorer.name;
+        explorer = { ...explorer, name: explorer.name === "小满" ? "星野" : "小满" };
+        showOutput("", `explorer.name = "${explorer.name}";\n// 之前：${previous}\n// 现在：${explorer.name}`, "给对象的已有属性赋新值，就完成了修改。对象本身仍是同一个对象。", "属性已修改");
+      } else if (action === "add") {
+        explorer.star = (explorer.star || 0) + 1;
+        showOutput("", `explorer.star = ${explorer.star};\n// 新增 / 更新了 star 属性`, "直接给新属性赋值就能添加属性；若属性已存在，则会更新它的值。", "属性已添加");
+      } else if (action === "delete") {
+        delete explorer.star;
+        showOutput("", 'delete explorer.star;\n// Object.hasOwn(explorer, "star") → false', "delete 移除了 star 属性。看看左侧档案，属性卡片也随之消失。", "属性已删除");
+      } else if (action === "toggle") {
+        explorer.online = !explorer.online;
+        showOutput("", `explorer.online = ${explorer.online};\n// 档案状态：${explorer.online ? "在线" : "离线"}`, "用赋值更新 online 属性；左侧档案状态点会跟着切换。", "属性已修改");
+      } else if (action === "reset") {
+        explorer = createExplorer();
+        showOutput("", 'const explorer = {\n  name: "小满",\n  role: "森林探险家",\n  level: 3,\n  online: true,\n  backpack: { item: "指南针", count: 1 }\n};', "档案已恢复初始状态，可以继续探索对象操作。", "已重置");
+      }
+    }
+
+    actionButtons.forEach((button) => {
+      button.addEventListener("click", () => runAction(button.dataset.action));
+    });
+
+    document.querySelector("#add-form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = document.querySelector("#property-input");
+      const key = input.value.trim();
+      if (!key) {
+        input.focus();
+        return;
+      }
+      explorer[key] = "新属性";
+      input.value = "";
+      showOutput("", `explorer["${key}"] = "新属性";\n// Object.hasOwn(explorer, "${key}") → true`, `新增了名为「${key}」的属性。使用方括号和字符串，属性名也可以来自输入值。`, "属性已添加");
+    });
+
+    methodButtons.forEach((button) => {
+      button.addEventListener("click", () => runMethod(button.dataset.method));
+    });
+
+    renderExplorer();
+    codeElement.textContent = 'const explorer = {\n  name: "小满",\n  role: "森林探险家",\n  level: 3,\n  online: true,\n  backpack: { item: "指南针", count: 1 },\n  greet() { return `你好，我是${this.name}！`; }\n};';
+  </script>
+</body>
+</html>
